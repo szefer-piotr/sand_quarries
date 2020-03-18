@@ -1,0 +1,9 @@
+{
+    "path" : "~/sand_quarries",
+    "sortOrder" : [
+        {
+            "ascending" : true,
+            "columnIndex" : 2
+        }
+    ]
+}

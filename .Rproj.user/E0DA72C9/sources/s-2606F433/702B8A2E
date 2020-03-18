@@ -1,0 +1,24 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1584359686708.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "702B8A2E",
+    "lastKnownWriteTime" : 1584359817,
+    "last_content_update" : 1584359817309,
+    "path" : "~/sand_quarries/data/comparisons.R",
+    "project_path" : "data/comparisons.R",
+    "properties" : {
+        "cursorPosition" : "171,41",
+        "docOutlineVisible" : "0",
+        "scrollLine" : "141",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

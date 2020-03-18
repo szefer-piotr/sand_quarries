@@ -1,0 +1,114 @@
+---
+title: "[TYTUŁ ROBOCZY] Different patterns of diversity, richness and community composition of predators, parasitoids and herbivorous Aculaeta during succession of sand quarries."
+output: html_document
+author: Twerd, Szefer ...
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+options(knitr.table.format = "html")
+```
+
+##Abstract [wstępnie]
+
+Żwirownie małopowierzchniowe, nieużytkowane i nierekultywowane są isotonymi bankami bioróżnorodności w krajobrazie antropogenicznym. Jednakże środowiska te podlegaja dynamicznym procesom sukcesji z terenów otwartych stwarzających dogondne warunki dla Aculaeta w kierunku zadrzewień. Proces ten może mieć istotny wpływ na ich wartość dla bioróżnorodności. Pomimo tego mało jest informacji na temat tego, jak niektóre grupy owadów reagują na zmiany sukcesyjne. Określiliśmy, jak struktura zgrupowań trzech grup żądłówek Aculatea, dla których wczesniej wykazano preferencje do tego typu środowisk. Skupiliśmy się na grupach różniących sie trybem życia: roślinożercy (Apoidea), drapieżcy (Sphecidae) oraz kleptopasożyty (Chrysididae). Wykazaliśmy, że grupy te wykazują odmienne odpowiedzi na sukcesję dla ich liczności różnorodności I bogactwa gatunkowego. Struktura zgrupowań była istotnie różna pomiędzy poszczególnyumi stadiami sukcesji i prędkośc wymiany gatunków była różna dla poszczególnych grup i nie związana ze wzorcami charakterystyk struktury zgrupowań. Pokazaliśmy, że pomimo braku zmian we wskaźnikach zgrupowań Spheciformes wykazywały dynamiczną wymianę gatunków pomiędzy w przebiegu sukcesji. Kleptopasożytnicze Chrysididae zmieniały się głównie poprzez zmiany dominacji popszczególnych gatunków. W przypadku Apiformes nowe gatunki wkraczają do zgrupowania w późniejszych stadiach sukcesji.
+
+## Wstęp [NOTATKI]
+
+Antropopresja zwykle utożsamiana jest ze zmniejszaniem się różnorodności gatunkowej prowadzącej do uprszczonej struktury zgrupowań i degeneracji funkcji ekosystemów. Jednakże niektóre grupy owadów, jak na przykład wykazano to dla pszczół (Twerd XXXX, Banaszak Cibicka XXXX i inne) mogą pozytywnie reagować na antropopresję. Przedstawianie tych środowisk jako ponktów o wysokiej bioróżnorodności pomija fakt, że podlegają one dynamicznym procesm sukcesji wtórnej, co może istotnie wpływać na liczebnośc i bogactwo gatunkowe żądłówek.
+Teoria sukcesji przewiduje, że wraz z sukcesją liczba rzadkich gatunków poowinna wzrastać (???). Jednakże nie musi to być prawdą dla żądłówek, dla których spontaniczna sukcesja pokazywała zwykle spadek różnorodności i bogactwa gatunkowego (XXXX). Jest to związane z ich preferencjami gatunków do danych warunków środowiskowych. Dodatkowo różne gildie jak drapieżcy, roślinożercy i kleptopasożyty mogą wykazywać odmienne wzorce zmian wraz z sukcesją.
+Teoria sukcesji oraz nasze poprzednie badania (Twerd et al. 20xx) sugeruje, że żwirownie powinny doświadczyć znacznej zmiany struktury zgrupowań, ze względu na drastycznie zmiewniające się warunki środowiskowe, od których zależne są żądłówki. 
+Dodatkowo, liczba gatunków, pomimo iż pozostaje stała, może być związana z dynamiczną wymianą gatunków wraz ze zmianami środowiska w ramiach sukcesji. 
+Poniższa praca skupia się na sprawdzeniu następujących hipotez: (i) zmieniające się wraz z sukcesją wzorce różnorodności, liczebności i bogactwa gatunkowego będą różne w zależności od ekologii trzech analizowanych grup żądłówek, (ii) struktura zgrupowań zmienia się w poszczególnych stadiach sukcesji, ale ... (iii) Struktura zgrupowań będzie zmieniała się najszybciej u ... i będzie związana z zastępowaniem sie gatunków bardziej niż ze zmianami ich liczebności.
+
+## Metody
+
+Wszystkie analizy przeprowadzono w porgramie R (R Development team XXXX). W celu przeanalizowania różnic pomiędzy wybranymi charakterystykami zgrupowań użyliśmy LM i GLM korzystając z pakietu *MASS* (). Rozkład reszt dla liczby osobników modelowany był za pomocą dwumianowego ujemnego (negative binomial) a liczby gatunków - rozkładem Poissona. W celu zbadania poszczególnych interakcji pomiędzy grupami żądłówek i stadiami sukcesji przeprowadziliśmy test post-hoc Tukeya używając jego implementacji w pakiecie *emmeans* ().
+Przeprowadziliśmy analizę RDA w celu przetestowania, czy struktura zgrupowań różni się pomiędzy poszczególnymi stadiami sukcesji i użyliśmy stadium jako zmiennej objaśniającej. Przed przeprowadzeniem analizy macierz liczności została poddana przekształceniu Hellingera (Legendre  & Cartes 2012). Aby sprawdzić, które gatunki odpowiadały najsilniej na wyróżnione stadia sukcesji dopasowaliśmy ich liczebności do zdefiniowanego modelu RDA za pomocą funkcji *envfit* w pakiecie *vegan* (Oksanen XXXX).
+Aby zobrazować procesy wymiany gatunków i zmian struktury zgrupowań pomiędzy poszczególnymi stadiami obliczyliśmy współczynniki beta różnorodności pomiędzy wszystkimi możliwymi kombinacjami stanowisk w dwóch porównywanych stadiach. Beta różnorodność może być podzielona na dwa komponenty: związany ze zmianami w strukturze dominacji gatunków oraz związany z przybywaniem noowych gatunków (Baselga 2013). Aby sprawdzić czy struktura zgrupowań podlegała jedynie reorganizacji, czy też podlegały wymianie gatunków obliczyliśmy te dwa komponenty różnorodności pomiędzy stadiami pomiędzy I a II, I a III oraz II i III stadiami sukcesji używając pakietu *codyn* (). Aby zachować równowagę pomiędzy liczbą pseudoreplikacji (np pownania stanowisk 1 i 2 oraz 1 i 3 są związane stanowiskiem 1) a ilością informacji obliczyliśmy współczynniki beta różnorodności pomiędzy wszystkimi unikalnymi parami stanowisk w dwóch porównywanych stadiach. Posłużyły one do przybliżenia rozkładów beta różnorodności pomiędzy poszczególnymi stanowiskami a różnice pomiędzy rozkładami zostały oszcowane testu Kołmogorova-Smirnofa.
+Dodatkowo przeanalizowaliśmy występowanie gatunków charakterystycznych dla poszczególnych gatunków do poszczególnych stadiów sukcesji metodą IndVal z użyniem pakietu *labdsv* (). 
+
+## Wyniki
+
+### 1. Wzorce w charakterystykach zgrupowań
+
+Najwyższe wskaźniki liczności, bogactwa gatunkowego i różnorodności zanotowano dla *Apiformes*, istotnie niższe dla *Spheciformes* i najniższe dla *Chrysididae*. Wartości tych wskaźników zmieniały się w poszczególnych stadiach sukcesji w zależności od rozpatrywanej grupy żądłówek (isotony efekt interakcji *tutaj Tab 1 z wynikami testów*). W przypadku *Apoidea* zauważalny jest istotny skok w pośrednim stadium sukcesji dla wszystkich analizowanych współczynników. Liczność, bogactwo gatunkowe i różnorodność *Spheciformes* nie zmieniała się pomiędzy stadiami sykcesji. W przypadku *Chrysididae* zanotowaliśmy jedynie istotny wzrost w liczebności w II stadium. 
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.height=3, fig.width=8}
+source("data/comparisons.R")
+fullflp
+```
+
+<font size="1">**Figure 1. Różnorodność,liczebność i bogactwo gatunkowe trzech grup Aculaeta w zależności od trzech wyróżnionych stadiów sukcesji żwirowni. Przedstawiono średnie oraz 95% CI typu bootstrap. Liczba osobników została poddana transformacji logarytmicznej w celu lepszej wizualizacji różnic omiędzy grupami. Punkty oznaczją wartości empiryczne. Litery łacińskie oznaczają wyniki testu post-hoc z poprawką Tukeya dla $\alpha$ = 0.05.** </font>
+
+## 2. Struktura zgrupowań
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+source("data/ordination.R")
+```
+
+Stadia sukcesji były istotnym czynnikiem wpływającym na strukturę zgrupowń (*Tab 2 - wyniki RDA*). W tabeli X podano gatunki, które odpowiadały najsilniej na wyróżnione stadia suukcesji.
+
+```{r,echo=FALSE, warning=FALSE, message=FALSE, fig.height=4, fig.width=10}
+par(mfrow = c(1,3))
+make_rda_plot(m, 3, "Apiformes", 1)
+make_rda_plot(m, 3, "Spheciformes", 3)
+make_rda_plot(m, 3, "Chrysididae", 2)
+```
+<font size="1">**Figure 2. Wykres ordynacji RDA dla stadium sukcesji jako dyskretnej zmiennej objaśniającej. W celu lepszej wizualizacji punkty zostały naniesione osobno. Na wykresie ordynacji przedstawiono gatunki które najsilniej odpowiadały nia czynik jakim są stadia sukcesji. Model tłumaczy `r R2*100`% zmienności zgrupowań.**</font>
+
+<font size="1">**Tab X. Lista gatunków których liczebność istotnie zmienia się w sposób wyznaczony przez stadia sukcesji w modelu RDA**</font>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(knitr)
+library(kableExtra)
+tabs <- round(gof[selected_gof, ],3)
+nmgr <- as.data.frame(cbind(colnames(asc),groups))
+rownames(nmgr) <- nmgr$V1
+grp <- nmgr[rownames(gof[selected_gof, ]), ]$groups
+
+kable(data.frame(tabs, Group = grp)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+### 2.1 $\beta$-różnorodność
+
+Wariancja w zagęszczeniu przypisana do wymieniających sie gatunków była największa dla pszół i Chrysididae sugerująca brak zmiany listy gatunków a raczei zmianyy ich liczebności.
+
+```{r, echo=FALSE, results='hide', fig.keep='all', message = FALSE, fig.width=10,fig.height=3}
+### Beta diversity figure
+
+# (*Balanced variation in abundance, whereby the individuals of some species in one site are substituted by the same number of individuals of different species in another site, and (ii) abundance gradients, whereby some individuals are lost from one site to the other.*)
+
+source("data/beta_diversity_partitioning.R")
+plotapi
+```
+
+Figure 3. Beta różnorodność pomiędzy parami stanowisk w poszczególnych stadiach.
+
+Jednakże to co miałem nadzieję pokazać lepiej widać na zgrupowaniach skumulowanych dla poszczególnych stadiów. Widać że gradient liczebności pełni bardziej istotną rolę u pszczół ale im późniejsze stadium tym ten komponent ma mniejsze znaczenie. Zastępowanie się gatunków (balanced component) ma natomiast większe znaczenie dla Spheciformes a zgrupowania Chrysididae zmieniają się głównie poprzez zmiany liczebności gatunków już obecnych. Dodatkowa analiza, gdzie macierze liczności są zastąpione macierzami incydencji dokładnie pokaże prędkość wymiany gatunków. 
+
+```{r, echo=FALSE, results='hide', fig.keep='all', message = FALSE, fig.width=10,fig.height=3}
+pwplot
+```
+
+Figure 4. Beta różnorodność dla kumulatywnej struktury zgrupowań w poszczególnych stadiach.
+
+### 2.2 Gatunki charakterystyczne dla poszczególnych stadiów
+
+W celu wyodrębnienia gatunków charakterystycznych dla poszczególnych stadiów sukcesji przeprowadziliśmy analizę metodą IndVal.
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(knitr)
+library(kableExtra)
+source("data/indicator_species.R")
+
+kable(dfr) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+# https://cran.r-project.org/web/packages/kableExtra/vignettes/awesome_table_in_html.html
+# kable(dt) %>%
+#   kable_styling("striped", full_width = F) %>%
+#   column_spec(5:7, bold = T) %>%
+#   row_spec(3:5, bold = T, color = "white", background = "#D7261E")
+```
