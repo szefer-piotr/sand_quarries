@@ -1,7 +1,10 @@
 ---
-title: "[TYTUŁ ROBOCZY] Different patterns of diversity, richness and community composition of predators, parasitoids and herbivorous Aculaeta during succession of sand quarries."
-output: html_document
-author: Twerd, Szefer ...
+title: '[TYTUŁ ROBOCZY] Different patterns of diversity, richness and community composition
+  of predators, parasitoids and herbivorous Aculaeta during succession of sand quarries.'
+author: "Twerd, Szefer ..."
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
