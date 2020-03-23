@@ -3,8 +3,8 @@ title: '[TYTUŁ ROBOCZY] Different patterns of diversity, richness and community
   of predators, parasitoids and herbivorous Aculaeta during succession of sand quarries.'
 author: "Twerd, Szefer ..."
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -28,7 +28,10 @@ Poniższa praca skupia się na sprawdzeniu następujących hipotez: (i) zmieniaj
 
 Wszystkie analizy przeprowadzono w porgramie R (R Development team XXXX). W celu przeanalizowania różnic pomiędzy wybranymi charakterystykami zgrupowań użyliśmy LM i GLM korzystając z pakietu *MASS* (). Rozkład reszt dla liczby osobników modelowany był za pomocą dwumianowego ujemnego (negative binomial) a liczby gatunków - rozkładem Poissona. W celu zbadania poszczególnych interakcji pomiędzy grupami żądłówek i stadiami sukcesji przeprowadziliśmy test post-hoc Tukeya używając jego implementacji w pakiecie *emmeans* ().
 Przeprowadziliśmy analizę RDA w celu przetestowania, czy struktura zgrupowań różni się pomiędzy poszczególnymi stadiami sukcesji i użyliśmy stadium jako zmiennej objaśniającej. Przed przeprowadzeniem analizy macierz liczności została poddana przekształceniu Hellingera (Legendre  & Cartes 2012). Aby sprawdzić, które gatunki odpowiadały najsilniej na wyróżnione stadia sukcesji dopasowaliśmy ich liczebności do zdefiniowanego modelu RDA za pomocą funkcji *envfit* w pakiecie *vegan* (Oksanen XXXX).
-Aby zobrazować procesy wymiany gatunków i zmian struktury zgrupowań pomiędzy poszczególnymi stadiami obliczyliśmy współczynniki beta różnorodności pomiędzy wszystkimi możliwymi kombinacjami stanowisk w dwóch porównywanych stadiach. Beta różnorodność może być podzielona na dwa komponenty: związany ze zmianami w strukturze dominacji gatunków oraz związany z przybywaniem noowych gatunków (Baselga 2013). Aby sprawdzić czy struktura zgrupowań podlegała jedynie reorganizacji, czy też podlegały wymianie gatunków obliczyliśmy te dwa komponenty różnorodności pomiędzy stadiami pomiędzy I a II, I a III oraz II i III stadiami sukcesji używając pakietu *codyn* (). Aby zachować równowagę pomiędzy liczbą pseudoreplikacji (np pownania stanowisk 1 i 2 oraz 1 i 3 są związane stanowiskiem 1) a ilością informacji obliczyliśmy współczynniki beta różnorodności pomiędzy wszystkimi unikalnymi parami stanowisk w dwóch porównywanych stadiach. Posłużyły one do przybliżenia rozkładów beta różnorodności pomiędzy poszczególnymi stanowiskami a różnice pomiędzy rozkładami zostały oszcowane testu Kołmogorova-Smirnofa.
+Aby zobrazować procesy wymiany gatunków i zmian struktury zgrupowań pomiędzy poszczególnymi stadiami obliczyliśmy współczynniki beta różnorodności pomiędzy wszystkimi możliwymi kombinacjami stanowisk w dwóch porównywanych stadiach. Beta różnorodność może być podzielona na dwa komponenty: związany ze zmianami w strukturze dominacji gatunków oraz związany z przybywaniem noowych gatunków (Baselga 2013). Aby sprawdzić czy struktura zgrupowań podlegała jedynie reorganizacji, czy też podlegały wymianie gatunków obliczyliśmy te dwa komponenty różnorodności dla zgrupowań skumulowanych dla wszystkich stanowisk w danym stadium sukcesji pomiędzy stadiami pomiędzy I a II, I a III oraz II i III. Obliczenia wykonano używając pakietu *codyn* (). 
+
+*[To jest dla wykresów gęstości] Aby zachować równowagę pomiędzy liczbą pseudoreplikacji (np pownania stanowisk 1 i 2 oraz 1 i 3 są związane stanowiskiem 1) a ilością informacji obliczyliśmy współczynniki beta różnorodności pomiędzy wszystkimi unikalnymi parami stanowisk w dwóch porównywanych stadiach. Posłużyły one do przybliżenia rozkładów beta różnorodności pomiędzy poszczególnymi stanowiskami a różnice pomiędzy rozkładami zostały oszcowane testu Kołmogorova-Smirnofa.*
+
 Dodatkowo przeanalizowaliśmy występowanie gatunków charakterystycznych dla poszczególnych gatunków do poszczególnych stadiów sukcesji metodą IndVal z użyniem pakietu *labdsv* (). 
 
 ## Wyniki
