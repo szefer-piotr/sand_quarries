@@ -46,6 +46,10 @@ gof <- "goodness"(m, display = "species",
 
 # Fit species onto ordination
 spc <- envfit(m, asc)
+write.table(cbind(rownames(spc$vectors),
+                  spc$vectors$arrows,
+                  spc$vectors$r,
+                  spc$vectors$pvals), "envfit.txt")
 selected_gof <- names(spc$vectors$pvals)[which(spc$vectors$pvals <= 0.05)]
 
 # pick both axes
@@ -257,11 +261,32 @@ make_rda_plot <- function(m, scl=3, type = "Apiformes", color){
 # par(mfrow=c(1,1))
 
 # 4. NMDS ----
-# par(mfrow=c(1,1))
-# nmds <-metaMDS(asc)
-# plot(nmds, display = "sites", type = "n")
-# points(nmds, col = stages$succession, pch=19)
-# 
+library(ggplot2)
+library(RColorBrewer)
+cols <- brewer.pal(3, "Set1")
+fGroups <- as.numeric(as.factor(groups))
+par(mfrow=c(1,1))
+nmds <-metaMDS(asc)
+png("nmds.png", width = 500, height=500)
+plot(nmds, display = "species", type = "n")
+points(nmds, display = "species", 
+       col = alpha(cols[fGroups], 0.9), 
+       pch = stages$succession+14, cex = 1.5)
+with(nmds, legend("topleft",
+                  legend = c("Apoidea Stage I",
+                             "Apoidea Stage II",
+                             "Apoidea Stage III",
+                             "Spheciformes Stage I",
+                             "Spheciformes Stage II",
+                             "Spheciformes Stage III",
+                             "Chrysididae Stage I",
+                             "Chrysididae Stage II",
+                             "Chrysididae Stage III"
+                             ), bty = "n",
+                  col = rep(c(cols[1], cols[3], cols[2]), each=3), 
+                  pch = rep(unique(stages$succession)+14,3), 
+                  pt.bg = colvec, cex=0.5))
+dev.off()
 # site_rich <- rowSums(asc>0)
 # gof2si
 # 
