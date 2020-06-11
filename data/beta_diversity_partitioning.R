@@ -126,7 +126,7 @@ dset <- data.frame(value = c(a12$Balanced,
                                       dim(s12)[1],dim(s13)[1],dim(s23)[1],
                                       dim(c12)[1],dim(c13)[1],dim(c23)[1],
                                       dim(c12)[1],dim(c13)[1],dim(c23)[1])),
-                   group = rep(c("Apoidae", "Spheciformes", "Chrysididae"),
+                   group = rep(c("Herbivores", "Predators", "Kleptoparasites"),
                                c(2*dim(a12)[1]+2*dim(a13)[1]+2*dim(a23)[1],
                                  2*dim(s12)[1]+2*dim(s13)[1]+2*dim(s23)[1],
                                  2*dim(c12)[1]+2*dim(c13)[1]+2*dim(c23)[1])))
@@ -217,8 +217,10 @@ logit <-function(x){log(x/(1-x))}
 # qqnorm(logit(dset[dset$group == "Spheciformes", ]$value))
 # qqline(logit(dset[dset$group == "Spheciformes", ]$value))
 
-LMA <- lm(logit(value)~type, data = dset[dset$group == "Apoidae", ])
-LMS <- lm(logit(value)~type, data = dset[dset$group == "Spheciformes", ])
+LMA <- lm(logit(value)~type, data = dset[dset$group == "Herbivores", ])
+LMS <- lm(logit(value)~type, data = dset[dset$group == "Predators", ])
+LMS <- lm(logit(value)~type, data = dset[dset$group == "Kleptoparasites", ])
+
 
 # LMC <- lm(logit(value)~type, data = dset[dset$group == "Chrysididae", ])
 # Chrysididae, liczebności małe i nie pozwalają na porównania.
@@ -228,24 +230,24 @@ library(emmeans)
 library(multcomp)
 
 kruskal.test(logit(value)~type, 
-             data = dset[dset$group == "Apoidae", ])
+             data = dset[dset$group == "Herbivores", ])
 
-phA <- posthoc.kruskal.nemenyi.test(x = dset[dset$group == "Apoidae", ]$value,
-                             g = dset[dset$group == "Apoidae", ]$type, 
+phA <- posthoc.kruskal.nemenyi.test(x = dset[dset$group == "Herbivores", ]$value,
+                             g = dset[dset$group == "Herbivores", ]$type, 
                              dist="Chisquare")
 
 kruskal.test(value~type, 
-             data = dset[dset$group == "Spheciformes", ])
+             data = dset[dset$group == "Predators", ])
 
-phS <- posthoc.kruskal.nemenyi.test(x = dset[dset$group == "Spheciformes", ]$value,
-                                    g = dset[dset$group == "Spheciformes", ]$type, 
+phS <- posthoc.kruskal.nemenyi.test(x = dset[dset$group == "Predators", ]$value,
+                                    g = dset[dset$group == "Predators", ]$type, 
                                     dist="Chisquare")
 
 kruskal.test(value~type, 
-             data = dset[dset$group == "Chrysididae", ])
+             data = dset[dset$group == "Kleptoparasites", ])
 
-phC <- posthoc.kruskal.nemenyi.test(x = dset[dset$group == "Chrysididae", ]$value,
-                                    g = dset[dset$group == "Chrysididae", ]$type, 
+phC <- posthoc.kruskal.nemenyi.test(x = dset[dset$group == "Kleptoparasites", ]$value,
+                                    g = dset[dset$group == "Kleptoparasites", ]$type, 
                                     dist="Chisquare")
 
 write.table(phA$p.value, "phA.txt")

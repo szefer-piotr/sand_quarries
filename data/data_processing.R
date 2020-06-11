@@ -17,22 +17,38 @@ colvec <- c(rgb(230,159,0,alpha, max=255),
 cgray <- rgb(10,10,10,alpha2, maxColorValue = 255)
 
 # Read the insect table ----
-api <- read.xlsx("data/abundance_table.xls", 1)
-sph <- read.xlsx("data/abundance_table.xls", 2)
-chr <- read.xlsx("data/abundance_table.xls", 3)
+# api <- read.xlsx("data/abundance_table.xls", 1)
+# sph <- read.xlsx("data/abundance_table.xls", 2)
+# chr <- read.xlsx("data/abundance_table.xls", 3)
+
+clean_dat <- function(dat){
+  ind <- grep("NA", colnames(dat))
+  if(length(ind) != 0){ccdat <- dat[, -ind]} else {ccdat <- dat}
+  ccdat <- ccdat[complete.cases(ccdat), ]
+  return(ccdat)
+}
+
+# Read the new dataset
+apir <- read.xlsx("data/life_history.xls", "herbivore", startRow = 3)
+sphr <- read.xlsx("data/life_history.xls", "predator", startRow = 3)
+chrr <- read.xlsx("data/life_history.xls", "cleptoparasite", startRow = 3)
+
+api <- clean_dat(apir)
+sph <- clean_dat(sphr)
+chr <- clean_dat(chrr)
 
 # Extract successional stages ----
 stages <- data.frame(site = 1:32, succession = api[,2])
 
 rownames(api) <- api[,1]
-api <- api[, 3:192]
-colnames(api)
+# api <- api[, 3:192]
+# colnames(api)
 
 # Check for duplicates
 colnames(api)[duplicated(colnames(api))]
 
 rownames(sph) <- sph[,1]
-sph <- sph[, 3:74]
+# sph <- sph[, 3:74]
 colnames(sph)
 
 # Check for duplicates
@@ -43,37 +59,42 @@ colnames(sph)[duplicated(colnames(sph))]
 # ‘oxy_qua’ # real duplicate concatenate these rows
 
 # convert names
-for(i in 1:dim(sph)[2]){
-  teststr <- as.character(colnames(sph[i]))
-  teststr <- tolower(teststr)
-  nm <- strsplit(teststr,"_")
-  new_name <- paste(substr(nm[[1]][1], 1,3),
-                    substr(nm[[1]][2], 1,3), sep="_")
-  if(new_name %in% colnames(sph)){
-    new_name <- paste(substr(nm[[1]][1], 1,3),
-                      substr(nm[[1]][2], 2,4), sep="_")
-  }
-  colnames(sph)[i] <- new_name
-}
+# for(i in 1:dim(sph)[2]){
+#   teststr <- as.character(colnames(sph[i]))
+#   teststr <- tolower(teststr)
+#   nm <- strsplit(teststr,"_")
+#   new_name <- paste(substr(nm[[1]][1], 1,3),
+#                     substr(nm[[1]][2], 1,3), sep="_")
+#   if(new_name %in% colnames(sph)){
+#     new_name <- paste(substr(nm[[1]][1], 1,3),
+#                       substr(nm[[1]][2], 2,4), sep="_")
+#   }
+#   colnames(sph)[i] <- new_name
+# }
 
 rownames(chr) <- chr[,1]
-chr <- chr[, 3:13]
+# chr <- chr[, 3:13]
 colnames(chr)
-# convert names
-for(i in 1:dim(chr)[2]){
-  teststr <- as.character(colnames(chr[i]))
-  teststr <- tolower(teststr)
-  nm <- strsplit(teststr,"_")
-  new_name <- paste(substr(nm[[1]][1], 1,3),
-                    substr(nm[[1]][2], 1,3), sep="_") 
-  colnames(chr)[i] <- new_name
-}
 
+# # convert names
+# for(i in 1:dim(chr)[2]){
+#   teststr <- as.character(colnames(chr[i]))
+#   teststr <- tolower(teststr)
+#   nm <- strsplit(teststr,"_")
+#   new_name <- paste(substr(nm[[1]][1], 1,3),
+#                     substr(nm[[1]][2], 1,3), sep="_") 
+#   colnames(chr)[i] <- new_name
+# }
+
+
+api <- api[, -grep("site|succession", colnames(api))]
+sph <- sph[, -grep("site|succession", colnames(sph))]
+chr <- chr[, -grep("site|succession", colnames(chr))]
 
 # Create a combined table ----
 asc <- cbind(api, sph, chr)
 # Indicate group name
-groups <- rep(c("Apiformes", "Spheciformes","Chrysididae"),
+groups <- rep(c("Herbivores", "Predators","Kleptoparasites"),
               times=c(dim(api)[2], dim(sph)[2], dim(chr)[2]))
 group_col <- rep(c("red", "orange","black"),
                  times=c(dim(api)[2], dim(sph)[2], dim(chr)[2]))
@@ -82,7 +103,7 @@ group_col <- rep(c("red", "orange","black"),
 # Full data set.
 
 desasc <- rbind(stages,stages,stages)
-desasc$group <- rep(c("Apiformes", "Spheciformes","Chrysididae"), 
+desasc$group <- rep(c("Herbivores", "Predators","Kleptoparasites"), 
                      each = dim(stages)[1])
 ind <-c("shannon")
 desasc$sw <- c(diversity(api, index = ind, MARGIN = 1, base = exp(1)),
@@ -111,11 +132,11 @@ s1 <- stages$succession == 1
 s2 <- stages$succession == 2
 s3 <- stages$succession == 3
 
-stage1 <- list("Apiformes" = as.numeric(sort(colSums(api[s1,]),
+stage1 <- list("Herbivores" = as.numeric(sort(colSums(api[s1,]),
                                                    decreasing = T)),
-               "Spheciformes" = as.numeric(sort(colSums(sph[s1,]),
+               "Predators" = as.numeric(sort(colSums(sph[s1,]),
                                                       decreasing = T)),
-               "Chrysididae" = as.numeric(sort(colSums(chr[s1,]),
+               "Kleptoparasites" = as.numeric(sort(colSums(chr[s1,]),
                                                      decreasing = T)))
 # stage2 <-
 # stage3 <-
@@ -152,7 +173,7 @@ rac_mx <- cbind(rac_mxa,
 # df for multivariate_difference codyn, 
 # this won't work as we do not have an experimental design
 
-dfa <- data.frame(group = rep("Apiformes", dim(api)[2]),
+dfa <- data.frame(group = rep("Herbivores", dim(api)[2]),
                   stage = rep(c("SI","SII","SIII"), 
                               each=dim(api)[2]))
 t1 <- rac_mxa[1,]

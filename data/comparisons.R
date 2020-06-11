@@ -174,9 +174,9 @@ fullflp <- fpl + geom_jitter(width=0.1, alpha=0.3, cex=2) +
   facet_wrap(~type, scales = "free") +
   stat_summary(fun.data=mean_cl_boot, 
                geom="pointrange", lwd=0.8) +
-  stat_summary(fun.y=mean, geom="point",cex = 2) +
-  stat_summary(fun.y=mean, geom="line",lwd=1, lty=2)+
-  stat_summary(fun.y=mean, geom="text", 
+  stat_summary(fun=mean, geom="point",cex = 2) +
+  stat_summary(fun=mean, geom="line",lwd=1, lty=2)+
+  stat_summary(fun=mean, geom="text", 
                col = rgb(10,10,10,180,maxColorValue = 255),
                hjust = 1.2,
                vjust = -1.5) +
