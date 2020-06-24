@@ -34,23 +34,23 @@ R2
 
 # 2. Variance explained -----
 sumeig <- summary(eigenvals(m))
-sumeig[2,1]
-sumeig[2,2]
+round(sumeig[2,1],3)
+round(sumeig[2,2],3)
 # >>> goodness of fit ----
 
 # GOF - total inertia explained for given number of axes
-gof <- "goodness"(m, display = "species", 
-                  statistic = "explained",
-                  model="CCA",
-                  summarize = FALSE)
+# gof <- "goodness"(m, display = "species", 
+#                   statistic = "explained",
+#                   model="CCA",
+#                   summarize = FALSE)
 
 # Fit species onto ordination
 spc <- envfit(m, asc)
-write.table(cbind(rownames(spc$vectors),
-                  spc$vectors$arrows,
-                  spc$vectors$r,
-                  spc$vectors$pvals), "envfit.txt")
-selected_gof <- names(spc$vectors$pvals)[which(spc$vectors$pvals <= 0.05)]
+# write.table(cbind(rownames(spc$vectors),
+#                   spc$vectors$arrows,
+#                   spc$vectors$r,
+#                   spc$vectors$pvals), "envfit.txt")
+# selected_gof <- names(spc$vectors$pvals)[which(spc$vectors$pvals <= 0.05)]
 
 # pick both axes
 # specs <-sort(round(gof[,1]+gof[,2], 3), decreasing = T)
@@ -60,8 +60,8 @@ selected_gof <- names(spc$vectors$pvals)[which(spc$vectors$pvals <= 0.05)]
 
 # decomposes the inertia into partial,  constrained and unconstrained components for each site or species. Legendre & De Cáceres (2012) called these inertia components as local contributions to beta-diversity (LCBD) and species contributions to beta-diversity (SCBD),and they give these as relative contributions summing up to unity 
 
-gof2sp <- inertcomp(rda1, display = "species", proportional = F)
-gof2si <- inertcomp(rda1, display = "sites", proportional = T)
+# gof2sp <- inertcomp(rda1, display = "species", proportional = F)
+# gof2si <- inertcomp(rda1, display = "sites", proportional = T)
 
 # plot(colSums(log(asc+1))~ gof2[,2])
 # par(new=T)
@@ -135,17 +135,18 @@ make_rda_plot <- function(m, scl=3, type = "Apiformes", color){
   
   if(lgn != 0){
     text(m, display="species", scaling=scl,
-         select = selected_gof[selected_gof %in% grnames], 
+         select = selected_gof[selected_gof %in% grnames],
          col=cgray)
   }
-  
 }
 
+
+pdf("fig2_rda.pdf", width = 12, height = 4)
 par(mfrow = c(1,3))
 make_rda_plot(m, 3, "Herbivores", 1)
 make_rda_plot(m, 3, "Predators", 3)
 make_rda_plot(m, 3, "Kleptoparasites", 2)
-
+dev.off()
 
 # points(m, display = "species",
 #        col = colvec[1],

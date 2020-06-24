@@ -21,10 +21,12 @@ cgray <- rgb(10,10,10,alpha2, maxColorValue = 255)
 # sph <- read.xlsx("data/abundance_table.xls", 2)
 # chr <- read.xlsx("data/abundance_table.xls", 3)
 
-clean_dat <- function(dat){
+clean_dat <- function(dat, clean.row = TRUE){
   ind <- grep("NA", colnames(dat))
   if(length(ind) != 0){ccdat <- dat[, -ind]} else {ccdat <- dat}
-  ccdat <- ccdat[complete.cases(ccdat), ]
+  if(clean.row){
+    ccdat <- ccdat[complete.cases(ccdat), ]
+  }
   return(ccdat)
 }
 
@@ -182,3 +184,71 @@ t3 <- rac_mxa[3,]
 
 dfa <- cbind(dfa, abund = c(t1,t2,t3))
 dfa$spec <- c(names(t1),names(t2),names(t3))
+
+# Rare species data preparation
+raredatr <- read.xlsx("data/life_history.xls", "rare_species", startRow = 2)
+raredat <- clean_dat(raredatr, clean.row = FALSE)
+names(raredat)[1:3] <- c("status", "lifeh", "spec")
+
+matrix.to.data2 <- function(mat, col.shift=0){
+  # This function takes matrix and converts each entry into a 
+  # data frame with rows and column naes and entry values.
+  drow <- 1
+  data <- data.frame(row=0,col=0,val=0)
+  for (irow in rownames(mat)){
+    for (icol in colnames(mat)){
+      if (mat[irow,icol] != 0) {
+        #print(paste(irow,icol,mat[irow,icol]))
+        data[drow, ]$row = irow
+        data[drow, ]$col = icol
+        data[drow, ]$val = as.numeric(mat[irow,icol])
+        drow <- drow+1
+      }
+    }
+  }
+  return(data)
+}
+
+
+raredf = data.frame()
+lgth = dim(raredat)[2]
+rw = 1
+for(rw in 1:dim(raredat)[1]){
+  rowdes = raredat[rw,1:3]
+  rowsp=raredat[rw,4:lgth]
+  specs <- colnames(rowsp)[which(rowsp != 0)]
+  specno = rowsp[which(rowsp != 0)]
+  rowdes
+  rowsp
+  specs
+  specno
+  dfunit = data.frame(site=rep(specs, specno),
+                      status=rowdes$status,
+                      lifeh= rowdes$lifeh,
+                      spec = rowdes$spec)
+  raredf <- rbind(raredf,dfunit)
+}
+raredf
+raredf$vuln <- as.numeric(!is.na(raredf$status))
+raredf$cr <- 0
+raredf$cr[grep("CR", raredf$status)] <- 1
+
+raredf$rm <- 0
+raredf$rm[grep("rm|vrm", raredf$status)] <- 1
+
+raredf$stage <- 1
+raredf$stage[grep("X2", raredf$site)] <- 2
+raredf$stage[grep("X3", raredf$site)] <- 3
+raredf$sno <- 1
+raredf$sno[grep(".1", raredf$site, fixed = T)] <- 2
+raredf$sno[grep(".2", raredf$site, fixed = T)] <- 3
+raredf$sno[grep(".3", raredf$site, fixed = T)] <- 4
+raredf$sno[grep(".4", raredf$site, fixed = T)] <- 5
+raredf$sno[grep(".5", raredf$site, fixed = T)] <- 6
+raredf$sno[grep(".6", raredf$site, fixed = T)] <- 7
+raredf$sno[grep(".7", raredf$site, fixed = T)] <- 8
+raredf$sno[grep(".8", raredf$site, fixed = T)] <- 9
+raredf$sno[grep(".9", raredf$site, fixed = T)] <- 10
+
+raredf[raredf$lifeh == "cleptoparasite",]$lifeh <- "kleptoparasite"
+raredf$lifeh <- as.factor(as.character(raredf$lifeh))

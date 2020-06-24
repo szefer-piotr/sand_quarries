@@ -2,7 +2,7 @@
 
 # Source data processing script ----
 source("data/data_processing.R")
-library(nlme)
+# library(nlme)
 library(MASS)
 library(emmeans)
 library(multcomp)
@@ -12,6 +12,7 @@ library(multcomp)
 
 # General model
 abund_gen <- glm.nb(abun~1+succession, data = desasc)
+anova(abund_gen, test = "Chi")
 inter.test_gen <- emmeans(abund_gen, "succession")
 phabu_gen <- cld(inter.test_gen, Letter="abcdefghijklm")
 
@@ -38,6 +39,8 @@ AIC(abund_int1, abund_int2,abund_int3)
 inter.test1 <- emmeans(abund_int2, "GS")
 phabu <- cld(inter.test1, Letter="abcdefghijklm")
 
+
+contrast(inter.test1, type = "response")
 # >>> Plot ----
 # generate_letters
 # ap <- ggplot(desasc, aes(x = succession, y = abun, 
@@ -75,17 +78,7 @@ simpson <- glm(simp~1+GS, data = desasc)
 # >>> Analysis ----
 sw <- glm(sw~1+GS, data = desasc)
 sw_gen <- glm(sw~succession, data = desasc)
-# # >>> Plot ----
-# sp <- ggplot(desasc, aes(x = succession, y = sw, 
-#                          col = group,
-#                          group = group))
-# sp <- sp + geom_jitter(width=0.1, alpha=0.3) + 
-#   stat_summary(fun.data=mean_cl_boot, 
-#                geom="pointrange", lwd=0.8) +
-#   stat_summary(fun.y=mean, geom="point",cex = 4) +
-#   stat_summary(fun.y=mean, geom="line",cex = 1)
-# 
-# sp
+anova(sw_gen)
 
 # >>> Post-hoc ----
 inter.test2 <- emmeans(sw, "GS")
@@ -97,18 +90,8 @@ phsw_gen <- cld(inter.test2_gen, Letter="abcdefghijklm")
 # 3. Richness ----
 bg <- glm(rich~1+GS, data = desasc, family = "poisson")
 bg_gen <- glm(rich~1+succession, data = desasc, family = "poisson")
-# # >>> Plot ----
-# bgp <- ggplot(desasc, aes(x = succession, y = rich, 
-#                          col = group,
-#                          group = group))
-# bgp <- bgp + geom_jitter(width=0.1, alpha=0.3) + 
-#   stat_summary(fun.data=mean_cl_boot, 
-#                geom="pointrange", lwd=0.8) +
-#   stat_summary(fun.y=mean, geom="point",cex = 4) +
-#   stat_summary(fun.y=mean, geom="line",cex = 1)
-# 
-# bgp
-# summary(simpson)
+summary(bg_gen)
+anova(bg_gen, test="Chisq")
 
 # >>> Post-hoc ----
 inter.test3 <- emmeans(bg, "GS")
@@ -178,7 +161,7 @@ fullflp <- fpl + geom_jitter(width=0.1, alpha=0.3, cex=2) +
   stat_summary(fun=mean, geom="line",lwd=1, lty=2)+
   stat_summary(fun=mean, geom="text", 
                col = rgb(10,10,10,180,maxColorValue = 255),
-               hjust = 1.2,
+               hjust = 1.4,
                vjust = -1.5) +
   theme() +
   xlab("") + ylab("") +
@@ -188,6 +171,10 @@ fullflp <- fpl + geom_jitter(width=0.1, alpha=0.3, cex=2) +
                               colvec[3]))
           
 
+# pdf("fig1_glm.pdf", width = 12, height=4)
+# fullflp
+# dev.off()
+
 # Table 1 - results from mixed effect models
 summary(abund_int2)
 summary(sw)
@@ -196,6 +183,10 @@ summary(bg)
 phrich
 phsw
 phabu
+
+phrich_gen
+phsw_gen
+phabu_gen
 
 # Predict abundance
 abund_int2

@@ -1,5 +1,0 @@
-"0","source(""data/indicator_species.R"")
-"
-"2","cannot open compressed file '/home/piotrszefer/sand_quarries/.Rproj.user/shared/notebooks/5DB23DDE-analysis_summarry/1/E0DA72C95BEFCB6F/cbxhpt447z5fh_t/_rs_rdf_1542dee85ef.rdf', probable reason 'No such file or directory'"
-"2","Error in gzfile(file, ""wb"") : cannot open the connection
-"

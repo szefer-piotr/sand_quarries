@@ -12,6 +12,12 @@ library(betapart)
 require(vegan)
 library(ggplot2)
 library(codyn)
+library(emmeans)
+library(multcomp)
+library(brms)
+library(betareg)
+
+
 
 # Convert matrix into incidence matrix (0-1)
 
@@ -95,7 +101,7 @@ dset <- data.frame(value = c(a12$Balanced,
                              c23$Balanced,
                              c12$Gradient,
                              c13$Gradient,
-                             c23$Balanced),
+                             c23$Gradient),
                    type = rep(c("Balanced I  vs II", "Balanced I vs III",
                                 "Balanced II vs III",
                                 "Gradient I vs II", "Gradient I vs III",
@@ -132,169 +138,241 @@ dset <- data.frame(value = c(a12$Balanced,
                                  2*dim(c12)[1]+2*dim(c13)[1]+2*dim(c23)[1])))
 
 
-# dset <- data.frame(value = c(a12$Balanced,
-#                              a13$Balanced,
-#                              a12$Gradient,
-#                              a13$Gradient,
-#                              s12$Balanced,
-#                              s13$Balanced,
-#                              s12$Gradient,
-#                              s13$Gradient,
-#                              c12$Balanced,
-#                              c13$Balanced,
-#                              c12$Gradient,
-#                              c13$Gradient),
-#                    type = rep(c("Balanced I  vs II", "Balanced I vs III",
-#                               "Gradient I vs II", "Gradient I vs III",
-#                               "Balanced I  vs II", "Balanced I vs III",
-#                               "Gradient I vs II", "Gradient I vs III",
-#                               "Balanced I  vs II", "Balanced I vs III",
-#                               "Gradient I vs II", "Gradient I vs III"),
-#                               c(dim(a12)[1],dim(a13)[1],
-#                                 dim(a12)[1],dim(a13)[1],
-#                                 dim(s12)[1],dim(s13)[1],
-#                                 dim(s12)[1],dim(s13)[1],
-#                                 dim(c12)[1],dim(c13)[1],
-#                                 dim(c12)[1],dim(c13)[1])),
-#                    comparison = rep(c("I vs II", "I vs III",
-#                                       "I vs II", "I vs III",
-#                                       "I vs II", "I vs III",
-#                                       "I vs II", "I vs III",
-#                                       "I vs II", "I vs III",
-#                                       "I vs II", "I vs III"),
-#                                     c(dim(a12)[1],dim(a13)[1],
-#                                       dim(a12)[1],dim(a13)[1],
-#                                       dim(s12)[1],dim(s13)[1],
-#                                       dim(s12)[1],dim(s13)[1],
-#                                       dim(c12)[1],dim(c13)[1],
-#                                       dim(c12)[1],dim(c13)[1])),
-#                    group = rep(c("Apoidae", "Spheciformes", "Chrysididae"),
-#                                c(dim(a12)[1]+dim(a13)[1]+dim(a12)[1]+dim(a13)[1],
-#                                  dim(s12)[1]+dim(s13)[1]+dim(s12)[1]+dim(s13)[1],
-#                                  dim(c12)[1]+dim(c13)[1]+dim(c12)[1]+dim(c13)[1])))
-
-plotapi <- ggplot(dset, aes(y=log(value/(1-value)), x = type,color = type)) +
-  geom_jitter(width = 0.2) +
-  facet_wrap(~group, scales = "free")
-plotapi
-
 #PLOT ----
+
+# plotapi <- ggplot(dset, aes(y=log(value/(1-value)), x = type,color = type)) +
+#   geom_jitter(width = 0.2) +
+#   facet_wrap(~group, scales = "free")
+# plotapi
+
 dset$diff <- substr(dset$type,1,8)
 
-plotapi <- ggplot(dset, aes(value, color = type,
-                            fill = type,
-                            linetype=comparison)) +
-  # geom_density(aes(y = ..scaled..), adjust=5) +
-  geom_density(adjust=5) +
-  facet_wrap(~group*diff, scales = "free") + 
-  xlab("") + ylab("") +
-  xlim(c(0,1))+
-  theme_classic() +
-  scale_color_manual(values=c(colvec[1], 
-                              colvec[2], 
-                              colvec[5],
-                              colvec[1],
-                              colvec[2],
-                              colvec[5])) +
-  scale_fill_manual(values = alpha(c(colvec[1], 
-                                     colvec[2], 
-                                     colvec[5],
-                                     colvec[1],
-                                     colvec[2],
-                                     colvec[5]),0.2))
-plotapi
+# plotapi <- ggplot(dset, aes(value, color = type,
+#                             fill = type,
+#                             linetype=comparison)) +
+#   # geom_density(aes(y = ..scaled..), adjust=5) +
+#   geom_density(adjust=5) +
+#   facet_wrap(~group*diff, scales = "free") + 
+#   xlab("") + ylab("") +
+#   xlim(c(0,1))+
+#   theme_classic() +
+#   scale_color_manual(values=c(colvec[1], 
+#                               colvec[2], 
+#                               colvec[5],
+#                               colvec[1],
+#                               colvec[2],
+#                               colvec[5])) +
+#   scale_fill_manual(values = alpha(c(colvec[1], 
+#                                      colvec[2], 
+#                                      colvec[5],
+#                                      colvec[1],
+#                                      colvec[2],
+#                                      colvec[5]),0.2))
+# plotapi
 
 
 # TESTS ----
 logit <-function(x){log(x/(1-x))}
 
-# qqnorm(dset[dset$group == "Chrysididae", ]$value)
-# qqline(dset[dset$group == "Chrysididae", ]$value)
+# I am making here an assumption that no comparison can be compeletly dissimilar 1 or similar 0
+dset[dset$value == 0, ]$value <- 0.001
+dset[dset$value == 1, ]$value <- 0.999
+
+# lk <- logit(dset[dset$group == "Kleptoparasites", ]$value)
+# lp <- logit(dset[dset$group == "Predators", ]$value)
+# lh <- logit(dset[dset$group == "Herbivores", ]$value)
 # 
-# qqnorm(logit(dset[dset$group == "Apoidae", ]$value))
-# qqline(logit(dset[dset$group == "Apoidae", ]$value))
-# 
-# qqnorm(logit(dset[dset$group == "Spheciformes", ]$value))
-# qqline(logit(dset[dset$group == "Spheciformes", ]$value))
+# # Logit transformation doesn't do a good job ----
+# qqnorm(lk)
+# qqline(lk)
+# qqnorm(lp)
+# qqline(lp)
+# qqnorm(lh)
+# qqline(lh)
 
-LMA <- lm(logit(value)~type, data = dset[dset$group == "Herbivores", ])
-LMS <- lm(logit(value)~type, data = dset[dset$group == "Predators", ])
-LMS <- lm(logit(value)~type, data = dset[dset$group == "Kleptoparasites", ])
+# Make an interaction term for pairtwise comparisons ----
+dset$fInt<- paste(substr(dset$type, 1,1),
+                     gsub(" ", "", dset$comparison),
+                     substr(dset$group, 1, 1),
+                     sep="")
+# Comparison of II-nd and III-rd stage should always be lower
+# see what i can get if I only analyze IvsII and IvsIII.
+
+# Use beta regression for pairwise comparisons
+# Balanced component comparison
+
+# Data for genarl comparison ----
+bs1 <- dset[dset$diff == "Balanced", c("value",
+                                       "comparison",
+                                       "group",
+                                       "diff","fInt")]
+gs2 <- dset[dset$diff == "Gradient", c("value",
+                                       "comparison",
+                                       "group",
+                                       "diff", "fInt")]
+
+names(bs1) <- paste("b", names(bs1), sep="_")
+names(gs2) <- paste("g", names(gs2), sep="_")
+
+gset <- cbind(bs1, gs2)
+gset$bcvals <- gset$b_value+gset$g_value
+
+gset[gset$bcvals == 0, ]$bcvals <- 0.001
+gset[gset$bcvals == 1, ]$bcvals <- 0.999
+
+names(gset)[5] <- "fInt"
+
+# Get rid of the I vs III comparison
+gset <- gset[gset$b_comparison != "I vs III", ]
+
+# General bray-curtis ----
+br <- betareg(bcvals~b_group*b_comparison, data=gset, link="logit")
+
+summary(br)
+brtest <- emmeans(br, pairwise ~ b_comparison | b_group)
+# emmip(br, b_group ~ b_comparison)
+summary(brtest)
+names(brtest)
+cfs <-rbind(brtest$emmeans[1], brtest$emmeans[2],
+      brtest$emmeans[3], brtest$emmeans[4],
+      brtest$emmeans[5], brtest$emmeans[6])
+cfs <- as.data.frame(cfs)
+names(cfs) <- c("b_comparison",
+                "b_group",
+                "bcvals",
+                "SE",
+                "df",
+                "lcl",
+                "ucl") 
+
+bgcb <- ggplot(gset, aes(b_comparison, bcvals)) +
+  geom_jitter(width = 0.1,aes(color=b_group), alpha = 0.2)+
+  geom_line(aes(group = 1, color = b_group), lwd = c(0,0,1,1,1,1), data = cfs)+
+  geom_errorbar(aes(ymin = lcl, ymax = ucl, color = b_group),
+                data = cfs, width = 0, lwd=1) +
+  geom_point(data = cfs, size = 3, aes(color = b_group))+
+  facet_wrap(~b_group)+
+  scale_color_manual(values=c(colvec[1], 
+                              colvec[2], 
+                              colvec[3]))
+ 
+# bgcb
+
+# pdf("fig3b_bc.pdf", width=12, height=4)
+# bgcb
+# dev.off()
+
+# CONDITIONS ----
+# condition <- dset$diff == "Balanced"
+# condition <- dset$diff == "Gradient"
+# condition <- (dset$diff == "Balanced" & dset$comparison != "I vs III")
+condition <- (dset$diff == "Gradient" & dset$comparison != "I vs III")
+
+# Components ----
+br1 <- betareg(value~comparison*group, 
+                        data = dset[condition,], 
+                        link = "logit")
+summary(br1)
+brtest <- emmeans(br1, pairwise ~ comparison | group)
+# emmip(br, b_group ~ b_comparison)
+summary(brtest)
+names(brtest)
+cfs <-rbind(brtest$emmeans[1], brtest$emmeans[2],
+            brtest$emmeans[3], brtest$emmeans[4],
+            brtest$emmeans[5], brtest$emmeans[6])
+cfs <- as.data.frame(cfs)
+names(cfs) <- c("comparison",
+                "group",
+                "value",
+                "SE",
+                "df",
+                "lcl",
+                "ucl") 
+
+bgcb <- ggplot(dset[condition,], aes(comparison, value)) +
+  geom_jitter(width = 0.1,aes(color=group), alpha = 0.2)+
+  geom_line(aes(group = 1, color = group), lty = c(2,2,2,
+                                                   2,2,2), data = cfs)+
+  geom_errorbar(aes(ymin = lcl, ymax = ucl, color = group),
+                data = cfs, width = 0, lwd=1) +
+  geom_point(data = cfs, size = 3, aes(color = group))+
+  facet_wrap(~group)+
+  scale_color_manual(values=c(colvec[1], 
+                              colvec[2], 
+                              colvec[3]))+
+  # ggtitle("Balanced component")
+  ggtitle("Gradient component")
+
+# pdf("fig3c_balanced.pdf", width=12, height=4)
+# bgcb
+# dev.off()
+
+# pdf("fig3c_gradient.pdf", width=12, height=4)
+# bgcb
+# dev.off()
 
 
-# LMC <- lm(logit(value)~type, data = dset[dset$group == "Chrysididae", ])
-# Chrysididae, liczebności małe i nie pozwalają na porównania.
 
-library("PMCMR")
-library(emmeans)
-library(multcomp)
+# Mean beta-comparisons ----
 
-kruskal.test(logit(value)~type, 
-             data = dset[dset$group == "Herbivores", ])
+condition <- dset$diff == "Balanced"
+# condition <- dset$diff == "Gradient"
 
-phA <- posthoc.kruskal.nemenyi.test(x = dset[dset$group == "Herbivores", ]$value,
-                             g = dset[dset$group == "Herbivores", ]$type, 
-                             dist="Chisquare")
+br2 <- betareg(value~fInt, 
+                      data = dset[condition, ], 
+                      link = "logit")
+brtest <- emmeans(br2, "fInt")
+brtest <- cld(brtest, Letter="abcdefghijklm")
+brsum <- as.data.frame(brtest)
+grlist <- strsplit(as.character(brsum$fInt), "I")
+for(i in 1:length(grlist)){
+  print(grlist[[i]])
+  grlist[[i]] <- grlist[[i]][-(which(grlist[[i]] == ""))]
+}
+groups <- c()
+for(i in 1:length(grlist)){
+  gi <- grlist[[i]][length(grlist[[i]])]
+  groups <- c(groups, gi)
+}
 
-kruskal.test(value~type, 
-             data = dset[dset$group == "Predators", ])
+brsum$group <- groups
+dset$fComp <- as.numeric(dset$comparison)
 
-phS <- posthoc.kruskal.nemenyi.test(x = dset[dset$group == "Predators", ]$value,
-                                    g = dset[dset$group == "Predators", ]$type, 
-                                    dist="Chisquare")
+mean_plot <- ggplot(brsum, aes(x = fInt, y = emmean, 
+                  color = group,
+                  label = .group)) + 
+  geom_point()+
+  geom_errorbar(aes(ymin=asymp.LCL, 
+                    ymax=asymp.UCL), 
+                width=.2,
+                position=position_dodge(0.05))+
+  stat_summary(fun=mean, geom="text", 
+               col = rgb(10,10,10,180,maxColorValue = 255),
+               hjust = 1.4,
+               vjust = -1.5)+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-kruskal.test(value~type, 
-             data = dset[dset$group == "Kleptoparasites", ])
+# pdf("fig3d_mean_comparison.pdf", width=8, height=8)
+# mean_plot
+# dev.off()
 
-phC <- posthoc.kruskal.nemenyi.test(x = dset[dset$group == "Kleptoparasites", ]$value,
-                                    g = dset[dset$group == "Kleptoparasites", ]$type, 
-                                    dist="Chisquare")
-
-write.table(phA$p.value, "phA.txt")
-write.table(phS$p.value,"phS.txt")
-write.table(phC$p.value,"phC.txt")
-
-inter.test1 <- emmeans(LMA, "type")
-phabuA <- cld(inter.test1, Letter="abcdefghijklm")
-# plot(phabuA)
-
-inter.test1 <- emmeans(LMS, "type")
-phabuS <- cld(inter.test1, Letter="abcdefghijklm")
-# plot(phabu)
-
-
-# individual group
-# apigra <- dset[dset$group == "Apoidae",]
-# apigra <- apigra[grep("Gradient", dset$type),]
-# apigra <- apigra[complete.cases(apigra),]
-# # dist1 <- apigra[apigra$comparison == "I vs II",]
-# # dist2 <- apigra[apigra$comparison == "I vs III",]
-# 
-# apibal <- dset[dset$group == "Apoidae",]
-# apibal <- apibal[grep("Balanced", dset$type),]
-# apibal <- apibal[complete.cases(apibal),]
-# dist1 <- apibal[apibal$comparison == "I vs II",]
-# dist2 <- apibal[apibal$comparison == "I vs III",]
-
-# rank(sort(dist1$value) - sort(dist2$value))
-
-# # KS test
-# ks.test(dist1$value,dist2$value)
-# ks.test(dist1$value,dist2$value)
-# 
-# d1d2 <- cbind(sort(dist1$value), sort(dist2$value))
-# ks.test(d1d2[,1],d1d2[,2])
-# diff <- d1d2[,1]-d1d2[,2]
-# rank(diff[-7])
-# duplicated(diff)
-# d1d2rem <- d1d2[-7,]
-# ks.test(d1d2rem[,1],d1d2rem[,2])
-# ks.test(diff[-7])
-# duplicated(d1d2rem[,1]-d1d2rem[,2])
-# 
-# wilcox.test(diff[-7])
+# pdf("fig3d_mean_comparison_gradient.pdf", width=8, height=8)
+# mean_plot
+# dev.off()
 
 
+# Bayesian estimation ----
+
+# That would have to be broken into two groups
+get_prior(value~comparison*group, family="beta", 
+          data = dset[condition, ])
+brm1 <- brm(value~comparison*group, family="beta", 
+            data = dset[condition, ])
+
+pp = brms::pp_check(brm1)
+pp
+plot(brm1)
+conditional_effects(brm1)
 
 # Pairwise cumulative ----
 ba12 <- beta.pair.abund(rbind(colSums(api1),colSums(api2)))
@@ -321,9 +399,9 @@ pwcomp <- data.frame(val = as.numeric(c(ba12,ba13,ba23,
                                   "Stage I vs II",
                                   "Stage I vs III",
                                   "Stage II vs III"),each=3),
-                     group = rep(c("Apoidae", 
-                                   "Spheciformes", 
-                                   "Chrysididae"),
+                     group = rep(c("Herbivores", 
+                                   "Predators", 
+                                   "Kleptoparasites"),
                                  c(9,9,9)),
                      beta = rep(c("Balanced",
                                   "Gradient",
@@ -345,8 +423,9 @@ pwplot <- ggplot(pwcomp, aes(fill=beta, y=val, x=comp)) +
              drop = T,
              scales = "free") + theme_bw()
 
-
-# pwplot
+pdf("fig3_beta.pdf", width = 12, height = 4)
+pwplot
+dev.off()
 
 # Incidence matrix ----
 
@@ -545,11 +624,13 @@ table <- data.frame(rbind(partapi1,
                              partchr2,
                              partchr3
                              ),
-                    group = rep(c("Apiformes",
-                                     "Spheciformes",
-                                     "Chrysididae"),
+                    group = rep(c("Herbivores",
+                                     "Predators",
+                                     "Kleptoparasites"),
                                    each=3),
                     stage = rep(c(1,2,3),3))
+
+table
 # 
 # # Species turnover between stages
 # 
