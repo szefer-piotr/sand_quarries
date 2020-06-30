@@ -354,3 +354,6 @@ dev.off()
 # sum(gof2sp[groups == "Spheciformes","CCA"])
 # sum(gof2sp[groups == "Apiformes","CCA"])
 # sum(gof2sp[groups == "Chrysididae","CCA"])
+
+# 5. Contingency table for envfit ----
+# https://www.datacamp.com/community/tutorials/contingency-tables-r
