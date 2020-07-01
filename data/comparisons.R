@@ -25,50 +25,19 @@ abund_int2 <- glm.nb(abun~1+GS, data = desasc)
 
 abund_int3 <- glm(abun~1+GS, data = desasc)
 
-
-
-
 # Select the best model
 AIC(abund_int1, abund_int2,abund_int3)
 # negative binomial model fits best
 
-# See the summary
-
-
 # >>> Post-hoc ----
 inter.test1 <- emmeans(abund_int2, "GS")
 phabu <- cld(inter.test1, Letter="abcdefghijklm")
-
-
 contrast(inter.test1, type = "response")
-# >>> Plot ----
-# generate_letters
-# ap <- ggplot(desasc, aes(x = succession, y = abun, 
-#                          col = group,
-#                          group = group))
-# ap <- ap + geom_jitter(width=0.1, alpha=0.3) + 
-#   stat_summary(fun.data=mean_cl_boot, 
-#              geom="pointrange", lwd=1) +
-#   stat_summary(fun.y=mean, geom="point",cex = 4) +
-#   stat_summary(fun.y=mean, geom="line",cex = 0.5, lty=2)+
-#   theme_bw()
-# ap
 
 # 2. Diversity ----
 # * SIMPSON ----
 # >>> Analysis ----
 simpson <- glm(simp~1+GS, data = desasc)
-
-# >>> Plot ----
-# si <- ggplot(desasc, aes(x = succession, y = simp, 
-#                          col = group,
-#                          group = group))
-# si <- si + geom_jitter(width=0.1, alpha=0.3) + 
-#   stat_summary(fun.data=mean_cl_boot, 
-#                geom="pointrange", lwd=0.8) +
-#   stat_summary(fun.y=mean, geom="point",cex = 4) +
-#   stat_summary(fun.y=mean, geom="line",cex = 1)
-# si
 
 # >>> Post-hoc ----
 # inter.test1 <- emmeans(simpson, "GS")
