@@ -1,21 +1,17 @@
 
 source("data/data_processing.R")
 
-library(brms)
+# library(brms)
 # library(lme4)
 # library(lmerTest)
 
 # Estimating probability of obtaining vulnerable individual
-# vulsp0 <- glm(vuln~1, family="bernoulli", 
-#       data = rdf)
-
-
 raredf$fStage <- "Stage I"
 raredf[raredf$stage == 2, ]$fStage <- "Stage II"
 raredf[raredf$stage == 3, ]$fStage <- "Stage III"
 raredf$vuln <- raredf$vuln == 1
 
-
+# Bayesian model
 # vulsp0c <- brm(vuln ~ lifeh*fStage, 
 #                data = raredf, 
 #                family = 'bernoulli', 
@@ -31,14 +27,42 @@ glm1 <- (glm(vuln ~ lifeh*fStage,
     data =raredf))
 
 # Predict the data and prepare plots
-
 it1 <- emmeans(glm1, pairwise~ fStage|lifeh )
-emmip(glm1, lifeh~fStage)
+as.data.frame(it1$contrasts)
+# emmip(glm1, lifeh~fStage)
 
-plot(it1)
-# 
-# preds <- predict(vulsp0c, robust=F) # 95% credible intervals
-# hist(preds[,1])
+rarespdf <- as.data.frame(it1$emmeans)
+
+invlog <- function(logitp){exp(logitp)/(1 + exp(logitp))}
+preds <- predict(glm1, robust=T) # 95% credible intervals
+invlog(preds)
+
+newdat <- expand.grid(fStage = c("Stage I",
+                                 "Stage II",
+                                 "Stage III"),
+                      lifeh = c("herbivore",
+                                "predator",
+                                "kleptoparasite"))
+newdata.pred = predict(glm1, type = "response",
+                       newdata = newdat,se.fit = T,
+                       interval = "confidence")
+newdata.pred
+plotdat <- data.frame(Stage = newdat$fStage,
+                      Group = newdat$lifeh,
+                      Proportion = newdata.pred$fit,
+                      SE = newdata.pred$se.fit,
+                      CLR = rep(colvec[1:3], each=3))
+
+p<- ggplot(plotdat, aes(x=Stage, y=Proportion, 
+                        group = Group,
+                        color = alpha(CLR, 0.5))) + 
+  geom_point()+
+  geom_errorbar(aes(ymin=Proportion-SE, 
+                    ymax=Proportion+SE), width=.2,
+                position=position_dodge(0.05))+
+  facet_wrap(~Group)
+p+ theme(legend.position = "none")
+
 # conditional_effects(vulsp0c)
 
 # https://mjskay.github.io/tidybayes/articles/tidy-brms.html

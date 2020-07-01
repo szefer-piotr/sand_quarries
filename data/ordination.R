@@ -37,7 +37,13 @@ round(sumeig[2,2],3)
 
 # Fit species onto ordination
 set.seed(1234)
+gps <- data.frame(Species = colnames(asc), Group = groups)
 spc <- envfit(m, asc, permutations = 9999)
+
+spcdf <- data.frame(Spec = names(spc$vectors$pvals),
+                    R = spc$vectors$r,
+                    Pvals = spc$vectors$pvals,
+                    gps[names(spc$vectors$pvals), ]$Group)
 
 # withouth selection
 as.factor(groups)
@@ -96,8 +102,6 @@ make_rda_plot(m, 3, "Kleptoparasites", 2)
 # https://www.datacamp.com/community/tutorials/contingency-tables-r
 
 efs <- names(spc$vectors$pvals[spc$vectors$pvals <= 0.05])
-
-gps <- data.frame(Species = colnames(asc), Group = groups)
 rownames(gps) <- gps[,1]
 gps$Significance <- "NS"
 # gps[!(rownames(gps) %in% efs), ]$ns <- "NS"
