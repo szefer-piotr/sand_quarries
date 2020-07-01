@@ -23,7 +23,7 @@ dfr$group <- gps[rownames(dfr),2]
 ct <- table(dfr$Cluster, dfr$group)
 rownames(ct) <- c("SI","SII","SIII")
 
-# Decomposition of 3x3 contingency table
+# Decomposition of 3x3 contingency table ----
 # https://rstudio-pubs-static.s3.amazonaws.com/65435_a8b26773b5d64138b6411a5aa306a5b9.html
 Ag.3.5.table.entries <- c(ct[1,],  ct[2,],  ct[3,])
 Ag.3.5 <- as.table(matrix(Ag.3.5.table.entries, nrow = 3, byrow = TRUE, dimnames = list(Stage = c('Early', 'Mid', 'Late'), Group = c('Herb', 'Klep', 'Pred'))))
@@ -103,38 +103,3 @@ Ag.3.6.A
 Ag.3.6.B
 Ag.3.6.C
 Ag.3.6.D
-
-
-###### PREVIOUS DECOMPOSITION
-# # Two columns Early and Late that have similar proportions
-# Ag.3.5.prop.mar.1.cols.13.table <- prop.table(Ag.3.5[,c(1,3)], margin = 1)
-# # transform to percentages
-# Ag.3.5.percent.mar.1.cols.13.table <- 100*Ag.3.5.prop.mar.1.cols.13.table
-# Ag.3.6.A <- Ag.3.5[c(1,3), c(1,3)]
-# Ag.3.6.A
-# Ag.3.6.A.loglm <- loglm( ~ Stage + Group, data = Ag.3.6.A) 
-# Ag.3.6.A.loglm
-# 
-# # Ho is true, this is homogenous: it is true that its row and column marginal totals contain the information that lie within the individual cells
-# margin.table(Ag.3.6.A, margin = 2)
-# Ag.3.6.B <- as.table(matrix(c(margin.table(Ag.3.6.A, margin = 2), 
-#                               Ag.3.5[2,c(1,3)]), 
-#                             nrow = 2, 
-#                             byrow = TRUE, 
-#                             dimnames = list(Group = c('Herb+Pred', 'Klep'), 
-#                                             Stage = c('Early', 'Late'))))  
-# Ag.3.6.B
-# 
-# Ag.3.6.B.loglm <- loglm( ~  Stage + Group, data = Ag.3.6.B) 
-# Ag.3.6.B.loglm
-# # H0 rejected - nonhomogenous
-# 
-# 
-# # present ‘percentages’ table
-# round(Ag.3.5.percent.mar.1.cols.12.table, 1)
-# Ag.3.6.A <- Ag.3.5[1:2, 1:2]
-# Ag.3.6.A
-# Ag.3.6.A.loglm <- loglm( ~ Stage + Group, data = Ag.3.6.A) 
-# Ag.3.6.A.loglm
-# # Herb and Klep are homogenous in Early and Mid stage
-# margin.table(Ag.3.6.A, margin = 1)
