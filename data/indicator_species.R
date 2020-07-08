@@ -24,16 +24,16 @@ ct <- table(dfr$Cluster, dfr$group)
 rownames(ct) <- c("SI","SII","SIII")
 
 # Decomposition of 3x3 contingency table ----
-# https://rstudio-pubs-static.s3.amazonaws.com/65435_a8b26773b5d64138b6411a5aa306a5b9.html
-Ag.3.5.table.entries <- c(ct[1,],  ct[2,],  ct[3,])
-Ag.3.5 <- as.table(matrix(Ag.3.5.table.entries, nrow = 3, byrow = TRUE, dimnames = list(Stage = c('Early', 'Mid', 'Late'), Group = c('Herb', 'Klep', 'Pred'))))
-Ag.3.5 <- t(Ag.3.5)
-addmargins(Ag.3.5)
+
+# Indicator species for trophic groups
+ivtable.entries <- c(ct[1,],  ct[2,],  ct[3,])
+ivtable <- t(as.table(matrix(ivtable.entries, nrow = 3, byrow = TRUE, dimnames = list(Stage = c('Early', 'Mid', 'Late'), Group = c('Herb', 'Klep', 'Pred')))))
+addmargins(ivtable)
 
 # Independence between Stage and Group
 library(MASS)
-Ag.3.5.loglm <- loglm( ~ Stage + Group, data = Ag.3.5) 
-Ag.3.5.loglm
+ivtable.loglm <- loglm( ~ Stage + Group, data = ivtable) 
+ivtable.loglm
 
 # Reject the hypothesis that Stage and Group are independent. There is a strong relationship between these two.
 
@@ -42,64 +42,59 @@ Ag.3.5.loglm
 # Table 3.3 page 83 Agresti book
 
 # Two rows Herb and Klep vs mid late that have similar proportions
-Ag.3.5.prop.mar.2.rows.12.table <- prop.table(Ag.3.5[1:2,], margin = 2)
+ivtable.prop.mar.1.rows.12.table <- prop.table(ivtable[1:2,], margin = 1)
 # transform to percentages
-Ag.3.5.percent.mar.2.rows.12.table <- 100*Ag.3.5.prop.mar.2.rows.12.table
-Ag.3.6.A <- Ag.3.5[1:2, 2:3]
-
-Ag.3.5.prop.mar.1.cols.23.table <- prop.table(Ag.3.5[,2:3], margin = 1)
-# transform to percentages
-Ag.3.5.percent.mar.1.cols.23.table <- 100*Ag.3.5.prop.mar.1.cols.23.table
-Ag.3.6.A <- Ag.3.5[1:2, 2:3]
-Ag.3.6.A.loglm <- loglm( ~ Group + Stage, data = Ag.3.6.A) 
-Ag.3.6.A.loglm
+ivtable.percent.mar.1.rows.12.table <- 100*ivtable.prop.mar.1.rows.12.table
+ivtable.A <- ivtable[1:2, 2:3]
+ivtable.A.loglm <- loglm( ~ Group + Stage, data = ivtable.A) 
+ivtable.A.loglm
 # Homogenous
 
-margin.table(Ag.3.6.A, margin = 1)
-Ag.3.6.B <- as.table(matrix(c(Ag.3.5[1:2, 1],margin.table(Ag.3.6.A, margin = 1)),
+margin.table(ivtable.A, margin = 1)
+ivtable.B <- as.table(matrix(c(ivtable[1:2, 1],margin.table(ivtable.A, margin = 1)),
                             nrow = 2, 
                             byrow = FALSE, 
                             dimnames = list(Group = c('Herb','Klep'), 
                                             Stage = c('Early', 'Mid+Late'))))  
-Ag.3.6.B
-Ag.3.6.B.loglm <- loglm( ~  Stage + Group, data = Ag.3.6.B) 
-Ag.3.6.B.loglm
-# Homogenous
+ivtable.B
+ivtable.B.loglm <- loglm( ~  Stage + Group, data = ivtable.B) 
+ivtable.B.loglm
+# Homogenous (but with zero in one cell)
 
 #We could start with 2x3 table 
-Ag.3.5.Herb.Klep.loglm <- loglm( ~ Group + Stage, data = Ag.3.5[1:2, ])
-Ag.3.5.Herb.Klep.loglm
+ivtable.Herb.Klep.loglm <- loglm( ~ Group + Stage, data = ivtable[1:2, ])
+ivtable.Herb.Klep.loglm
 # Seems like first two rows are homogenous. with G^2 = 1.2431761
 # 0.02009123 + 1.2230849
 
 # Since Ag.3.6.A is homogenous we could compute column marginal totals
-Ag.3.6.C <- as.table(matrix(c(margin.table(Ag.3.6.A, margin = 2), 
-                              Ag.3.5[3, 2:3]),
+ivtable.C <- as.table(matrix(c(margin.table(ivtable.A, margin = 2), 
+                               ivtable[3, 2:3]),
                             nrow = 2, 
                             byrow = TRUE, 
                             dimnames = list(Group = c('Herb+Klep','Pred'), 
                                             Stage = c('Mid', 'Late')))) 
-Ag.3.6.C.loglm <- loglm( ~  Stage + Group, data = Ag.3.6.C) 
-Ag.3.6.C.loglm
+ivtable.C.loglm <- loglm( ~  Stage + Group, data = ivtable.C) 
+ivtable.C.loglm
 # Nonhomogenous - Group and Stage are related
 
 # slopy code
-Ag.3.6.D <- as.table(matrix(c(margin.table(Ag.3.6.B, margin = 2)[1],
-                              Ag.3.5[3,1],
-                              margin.table(Ag.3.6.C, margin = 1)),
+ivtable.D <- as.table(matrix(c(margin.table(ivtable.B, margin = 2)[1],
+                               ivtable[3,1],
+                              margin.table(ivtable.C, margin = 1)),
                             nrow = 2, 
                             byrow = FALSE, 
                             dimnames = list(Group = c('Herb+Klep','Pred'), 
                                             Stage = c('Early', 'Mid+Late'))))
 
-Ag.3.6.D
-Ag.3.6.D.loglm <- loglm( ~  Stage + Group, data = Ag.3.6.D) 
-Ag.3.6.D.loglm
+ivtable.D
+ivtable.D.loglm <- loglm( ~  Stage + Group, data = ivtable.D) 
+ivtable.D.loglm
 
 # Test for 12 decimal places
-round(Ag.3.5.loglm$lrt,12) == round((Ag.3.6.A.loglm$lrt+Ag.3.6.B.loglm$lrt+Ag.3.6.C.loglm$lrt+Ag.3.6.D.loglm$lrt),12)
+round(ivtable.loglm$lrt,12) == round((ivtable.A.loglm$lrt+ivtable.B.loglm$lrt+ivtable.C.loglm$lrt+ivtable.D.loglm$lrt),12)
 
-Ag.3.6.A
-Ag.3.6.B
-Ag.3.6.C
-Ag.3.6.D
+ivtable.A
+ivtable.B
+ivtable.C
+ivtable.D

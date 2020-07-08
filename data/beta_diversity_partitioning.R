@@ -3,11 +3,7 @@
 # Load data ----
 source("data/data_processing.R")
 
-# bray.part function
-# Baselga, A. (2013). Separating the two components of abundance-based dissimilarity: balanced changes in abundance vs. abundance gradients. Methods in Ecology and Evolution, 4(6), 552–557. doi: 10.1111/2041-210X.12029
-
-# Abundance‐based dissimilarity can be derived from two antithetic patterns: (i) balanced variation in abundance, whereby the individuals of some species in one site are substituted by the same number of individuals of different species in another site or, in other words, species abundances change from site to site with different signs for different species and changes balance each other; and (ii) abundance gradients, whereby some individuals are lost from one site to the other or, in other words, all the species that change their abundance from one site to the other make it with the same sign. The widely used Bray‐Curtis index of dissimilarity is the result of summing these two sources of dissimilarity, and therefore might consider equivalent patterns that are markedly different. The partition of dBC dissimilarity into two components of balanced abundance variation and abundance gradient, respectively, may thus be useful to assess biodiversity patterns and to explore their causes, as substitution and loss of individuals are patterns that can derive from completely different processes. 
-
+# packages
 library(betapart)
 require(vegan)
 library(ggplot2)
@@ -16,8 +12,9 @@ library(emmeans)
 library(multcomp)
 library(brms)
 library(betareg)
-
-
+library(glmmTMB)
+library(lmtest)
+library(ggeffects)
 
 # Convert matrix into incidence matrix (0-1)
 
@@ -47,13 +44,21 @@ get_indices <- function(mat1, mat2){
   return(which(mat, arr.ind = T))
 }
 
+# mat <- matrix(1, nrow = dim(api2)[1], ncol=dim(api3)[1])
+# which(mat==1, arr.ind = T)
+
+get_indices2 <- function(mat1, mat2){
+  # Because I am comparing two different stages of succession, any comparison of sites will be valid, (e.g. even 1 vs 1) because these are from different successional stages.
+  mat <- matrix(1, nrow = dim(mat1)[1], ncol=dim(mat2)[1])
+  return(which(mat==1, arr.ind = T))
+}
+
 # Main function
-compute_pairs <- function(api1, api2, reps=999, 
-                          plt = 2, ...){
+compute_pairs <- function(api1, api2, 
+                          ...){
   
   # Get only unique set of pairs
-  
-  indices <- get_indices(api1,api2)
+  indices <- get_indices2(api1,api2)
   
   result <- data.frame()
   for(pair in 1:dim(indices)[1]){
@@ -62,14 +67,11 @@ compute_pairs <- function(api1, api2, reps=999,
     result <- rbind(result, 
                     c(bpa$beta.bray.bal,
                       bpa$beta.bray.gra,
-                      bpa$beta.bray))
+                      bpa$beta.bray,
+                      indices[pair,1]))
   }
-  colnames(result) <- c("Balanced", "Gradient", "Bray")
+  colnames(result) <- c("Balanced", "Gradient", "Bray", "InitSite")
   return(result)
-  
-  # plot(density(result[,plt], adjust = 1, kernel = "gaussian"),
-  #      xlim = c(0,  0.9), ylim = c(0,5),
-  #      xlab = "",ylab = "",main="",...)
 }
 
 a12 <- compute_pairs(api1,api2)
@@ -102,6 +104,24 @@ dset <- data.frame(value = c(a12$Balanced,
                              c12$Gradient,
                              c13$Gradient,
                              c23$Gradient),
+                   initSite = c(a12$InitSite,
+                             a13$InitSite,
+                             a23$InitSite,
+                             a12$InitSite,
+                             a13$InitSite,
+                             a23$InitSite,
+                             s12$InitSite,
+                             s13$InitSite,
+                             s23$InitSite,
+                             s12$InitSite,
+                             s13$InitSite,
+                             s23$InitSite,
+                             c12$InitSite,
+                             c13$InitSite,
+                             c23$InitSite,
+                             c12$InitSite,
+                             c13$InitSite,
+                             c23$InitSite),
                    type = rep(c("Balanced I  vs II", "Balanced I vs III",
                                 "Balanced II vs III",
                                 "Gradient I vs II", "Gradient I vs III",
@@ -138,41 +158,10 @@ dset <- data.frame(value = c(a12$Balanced,
                                  2*dim(c12)[1]+2*dim(c13)[1]+2*dim(c23)[1])))
 
 
-#PLOT ----
-
-# plotapi <- ggplot(dset, aes(y=log(value/(1-value)), x = type,color = type)) +
-#   geom_jitter(width = 0.2) +
-#   facet_wrap(~group, scales = "free")
-# plotapi
-
 dset$diff <- substr(dset$type,1,8)
 
-# plotapi <- ggplot(dset, aes(value, color = type,
-#                             fill = type,
-#                             linetype=comparison)) +
-#   # geom_density(aes(y = ..scaled..), adjust=5) +
-#   geom_density(adjust=5) +
-#   facet_wrap(~group*diff, scales = "free") + 
-#   xlab("") + ylab("") +
-#   xlim(c(0,1))+
-#   theme_classic() +
-#   scale_color_manual(values=c(colvec[1], 
-#                               colvec[2], 
-#                               colvec[5],
-#                               colvec[1],
-#                               colvec[2],
-#                               colvec[5])) +
-#   scale_fill_manual(values = alpha(c(colvec[1], 
-#                                      colvec[2], 
-#                                      colvec[5],
-#                                      colvec[1],
-#                                      colvec[2],
-#                                      colvec[5]),0.2))
-# plotapi
-
-
 # TESTS ----
-logit <-function(x){log(x/(1-x))}
+# logit <-function(x){log(x/(1-x))}
 
 # I am making here an assumption that no comparison can be compeletly dissimilar 1 or similar 0
 dset[dset$value == 0, ]$value <- 0.001
@@ -181,8 +170,8 @@ dset[dset$value == 1, ]$value <- 0.999
 # lk <- logit(dset[dset$group == "Kleptoparasites", ]$value)
 # lp <- logit(dset[dset$group == "Predators", ]$value)
 # lh <- logit(dset[dset$group == "Herbivores", ]$value)
-# 
-# # Logit transformation doesn't do a good job ----
+
+# # Logit transformation didn't do a good job
 # qqnorm(lk)
 # qqline(lk)
 # qqnorm(lp)
@@ -190,23 +179,24 @@ dset[dset$value == 1, ]$value <- 0.999
 # qqnorm(lh)
 # qqline(lh)
 
-# Make an interaction term for pairtwise comparisons ----
+# Make an interaction term for pairtwise comparisons
 dset$fInt<- paste(substr(dset$type, 1,1),
                      gsub(" ", "", dset$comparison),
                      substr(dset$group, 1, 1),
                      sep="")
+
 # Comparison of II-nd and III-rd stage should always be lower
 # see what i can get if I only analyze IvsII and IvsIII.
 
 # Use beta regression for pairwise comparisons
 # Balanced component comparison
 
-# Data for genarl comparison ----
-bs1 <- dset[dset$diff == "Balanced", c("value",
+# Data for genaral Bray-Curtis index comparison ----
+bs1 <- dset[dset$diff == "Balanced", c("value","initSite",
                                        "comparison",
                                        "group",
                                        "diff","fInt")]
-gs2 <- dset[dset$diff == "Gradient", c("value",
+gs2 <- dset[dset$diff == "Gradient", c("value","initSite",
                                        "comparison",
                                        "group",
                                        "diff", "fInt")]
@@ -222,72 +212,89 @@ gset[gset$bcvals == 1, ]$bcvals <- 0.999
 
 names(gset)[5] <- "fInt"
 
+# Add a random effect
+gset$reff <- paste(gset$b_initSite, 
+                   substr(gset$b_comparison, 1, 2), sep = "")
+
 # Get rid of the I vs III comparison
 gset <- gset[gset$b_comparison != "I vs III", ]
 
-# General bray-curtis ----
-br <- betareg(bcvals~b_group*b_comparison, data=gset, link="logit")
+# BRAY_CURTIS DISSIMILARITY ----
+# br <- betareg(bcvals~b_group*b_comparison, data=gset, link="logit")
 
-summary(br)
-brtest <- emmeans(br, pairwise ~ b_comparison | b_group)
-# emmip(br, b_group ~ b_comparison)
-summary(brtest)
-names(brtest)
-cfs <-rbind(brtest$emmeans[1], brtest$emmeans[2],
-      brtest$emmeans[3], brtest$emmeans[4],
-      brtest$emmeans[5], brtest$emmeans[6])
-cfs <- as.data.frame(cfs)
-names(cfs) <- c("b_comparison",
-                "b_group",
+br <- glmmTMB(bcvals ~ b_group*b_comparison, data = gset, family= beta_family(link = "logit"))
+brrand <- glmmTMB(bcvals ~ b_group*b_comparison + (1|reff), data = gset, family= beta_family(link = "logit"))
+
+brrandtest <- emmeans(brrand, pairwise ~ b_comparison | b_group)
+# brtest <- emmeans(br, pairwise ~ b_comparison | b_group)
+
+# Compare model withouth and with a random effect
+AIC(br, brrand)
+lrtest(br, brrand)
+# Seems like trandom effect model fits data better
+
+# Predict values for the plot
+bcpred <- ggpredict(brrand, terms = c("b_group", "b_comparison"),
+                   type = "re")
+
+cfs <- as.data.frame(bcpred)
+names(cfs) <- c("b_group",
                 "bcvals",
                 "SE",
-                "df",
                 "lcl",
-                "ucl") 
+                "ucl",
+                "b_comparison")
 
 bgcb <- ggplot(gset, aes(b_comparison, bcvals)) +
   geom_jitter(width = 0.1,aes(color=b_group), alpha = 0.2)+
-  geom_line(aes(group = 1, color = b_group), lwd = c(0,0,1,1,1,1), data = cfs)+
+  geom_line(aes(group = 1, color = b_group), 
+            lty = c(2,2,1,1,1,1), data = cfs)+
   geom_errorbar(aes(ymin = lcl, ymax = ucl, color = b_group),
                 data = cfs, width = 0, lwd=1) +
   geom_point(data = cfs, size = 3, aes(color = b_group))+
   facet_wrap(~b_group)+
   scale_color_manual(values=c(colvec[1], 
                               colvec[2], 
-                              colvec[3]))
+                              colvec[3]))+
+  ylab("Brray-Curtis dissimilarity")+xlab("")
  
-# bgcb
+# bgcb  + theme_bw()+theme(legend.position = "none")
 
-# pdf("fig3b_bc.pdf", width=12, height=4)
-# bgcb
-# dev.off()
+pdf("fig3b_bc.pdf", width=12, height=4)
+jpeg("fig3b_bc.jpg", width = 1200, height = 400, res = 150)
+bgcb  + theme_bw()+theme(legend.position = "none")
+dev.off()
 
-# CONDITIONS ----
+# GRADIENT COMPONENT----
 # condition <- dset$diff == "Balanced"
 # condition <- dset$diff == "Gradient"
 # condition <- (dset$diff == "Balanced" & dset$comparison != "I vs III")
 condition <- (dset$diff == "Gradient" & dset$comparison != "I vs III")
+dset$reff <- paste(dset$initSite, 
+                   gsub(" ","",substr(dset$comparison,1,2)), 
+                   sep="_")
 
-# Components ----
-br1 <- betareg(value~comparison*group, 
-                        data = dset[condition,], 
-                        link = "logit")
-summary(br1)
-brtest <- emmeans(br1, pairwise ~ comparison | group)
-# emmip(br, b_group ~ b_comparison)
-summary(brtest)
-names(brtest)
-cfs <-rbind(brtest$emmeans[1], brtest$emmeans[2],
-            brtest$emmeans[3], brtest$emmeans[4],
-            brtest$emmeans[5], brtest$emmeans[6])
-cfs <- as.data.frame(cfs)
-names(cfs) <- c("comparison",
-                "group",
+null_gra_rand <- glmmTMB(value ~ 1 + (1|reff), 
+                    data = dset[condition,], 
+                    family= beta_family(link = "logit"))
+gra_rand <- glmmTMB(value ~ comparison*group + (1|reff), 
+                    data = dset[condition,], 
+                    family= beta_family(link = "logit"))
+
+summary(gra_rand)
+gra_rand_test <- emmeans(gra_rand, pairwise ~ comparison | group)
+summary(gra_rand_test)
+
+grapred <- ggpredict(gra_rand, terms = c("group", "comparison"),
+                    type = "re")
+
+cfs <- as.data.frame(grapred)
+names(cfs) <- c("group",
                 "value",
                 "SE",
-                "df",
                 "lcl",
-                "ucl") 
+                "ucl",
+                "comparison")
 
 bgcb <- ggplot(dset[condition,], aes(comparison, value)) +
   geom_jitter(width = 0.1,aes(color=group), alpha = 0.2)+
@@ -297,82 +304,95 @@ bgcb <- ggplot(dset[condition,], aes(comparison, value)) +
                 data = cfs, width = 0, lwd=1) +
   geom_point(data = cfs, size = 3, aes(color = group))+
   facet_wrap(~group)+
-  scale_color_manual(values=c(colvec[1], 
-                              colvec[2], 
-                              colvec[3]))+
+  scale_color_manual(values=c(alpha(colvec[1],1), 
+                              alpha(colvec[2],1), 
+                              alpha(colvec[3],1)))+
   # ggtitle("Balanced component")
+  ylab("")+xlab("")+
   ggtitle("Gradient component")
 
-# pdf("fig3c_balanced.pdf", width=12, height=4)
-# bgcb
-# dev.off()
+# pdf("fig3c_gradient.pdf", width=12, height=4)
+jpeg("fig3c_gradient.jpg", width = 1200, height = 400, res = 150)
+bgcb + theme_bw()+theme(legend.position = "none")
+dev.off()
+
+# br1 <- betareg(value~comparison*group, 
+               # data = dset[condition,], 
+               # link = "logit")
+
+# BALANCED ----
+
+condition <- (dset$diff == "Balanced" & dset$comparison != "I vs III")
+
+null_bal_rand <- glmmTMB(value ~ 1 + (1|reff), 
+                    data = dset[condition,], 
+                    family= beta_family(link = "logit"))
+bal_rand <- glmmTMB(value ~ comparison*group + (1|reff), 
+                    data = dset[condition,], 
+                    family= beta_family(link = "logit"))
+
+summary(bal_rand)
+bal_rand_test <- emmeans(bal_rand, pairwise ~ comparison | group)
+summary(bal_rand_test)
+
+balpred <- ggpredict(bal_rand, terms = c("group", "comparison"),
+                     type = "re")
+
+cfs <- as.data.frame(balpred)
+names(cfs) <- c("group",
+                "value",
+                "SE",
+                "lcl",
+                "ucl",
+                "comparison")
+
+bgcb <- ggplot(dset[condition,], aes(comparison, value)) +
+  geom_jitter(width = 0.1,aes(color=group), alpha = 0.2)+
+  geom_line(aes(group = 1, color = group), lwd = 1, lty = c(2,2,1,
+                                                   1,1,1), data = cfs)+
+  geom_errorbar(aes(ymin = lcl, ymax = ucl, color = group),
+                data = cfs, width = 0, lwd=1) +
+  geom_point(data = cfs, size = 3, aes(color = group))+
+  facet_wrap(~group)+
+  scale_color_manual(values=c(alpha(colvec[1],1), 
+                              alpha(colvec[2],1), 
+                              alpha(colvec[3],1)))+
+  ylab("")+xlab("")+
+  ggtitle("Balanced component")
 
 # pdf("fig3c_gradient.pdf", width=12, height=4)
-# bgcb
-# dev.off()
+jpeg("fig3c_balanced.jpg", width = 1200, height = 500, res = 150)
+bgcb + theme_bw()+theme(legend.position = "none")
+dev.off()
 
+# RESULTS TABLE ----
+br <- summary(bal_rand)
+anova(null_bal_rand, bal_rand)
+summary(gra_rand)
+anova(null_bal_rand, gra_rand)
+summary(brrand)
 
+write.table(rbind(as.data.frame(balpred),
+      as.data.frame(grapred),
+      as.data.frame(bcpred)), "beta_random_model.txt")
+library(insight)
+get_variance(bal_rand)
+get_variance(gra_rand)
+get_variance(brrand)
 
-# Mean beta-comparisons ----
+# fixed effects variance (manually - not sure how to get
+# predict.glmmTMB to do this)
+linear.predictor <- model.matrix(bal_rand) %*% fixef(bal_rand)$cond
+fixed.var <- var(linear.predictor)
+# sum variance of all random effects ***excluding OLRE***
+all.ranef.var <- unlist(VarCorr(bal_rand)$cond)
+ranef.var <- all.ranef.var[!names(all.ranef.var) %in% "obs"]
 
-condition <- dset$diff == "Balanced"
-# condition <- dset$diff == "Gradient"
-
-br2 <- betareg(value~fInt, 
-                      data = dset[condition, ], 
-                      link = "logit")
-brtest <- emmeans(br2, "fInt")
-brtest <- cld(brtest, Letter="abcdefghijklm")
-brsum <- as.data.frame(brtest)
-grlist <- strsplit(as.character(brsum$fInt), "I")
-for(i in 1:length(grlist)){
-  print(grlist[[i]])
-  grlist[[i]] <- grlist[[i]][-(which(grlist[[i]] == ""))]
-}
-groups <- c()
-for(i in 1:length(grlist)){
-  gi <- grlist[[i]][length(grlist[[i]])]
-  groups <- c(groups, gi)
-}
-
-brsum$group <- groups
-dset$fComp <- as.numeric(dset$comparison)
-
-mean_plot <- ggplot(brsum, aes(x = fInt, y = emmean, 
-                  color = group,
-                  label = .group)) + 
-  geom_point()+
-  geom_errorbar(aes(ymin=asymp.LCL, 
-                    ymax=asymp.UCL), 
-                width=.2,
-                position=position_dodge(0.05))+
-  stat_summary(fun=mean, geom="text", 
-               col = rgb(10,10,10,180,maxColorValue = 255),
-               hjust = 1.4,
-               vjust = -1.5)+
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
-# pdf("fig3d_mean_comparison.pdf", width=8, height=8)
-# mean_plot
-# dev.off()
-
-# pdf("fig3d_mean_comparison_gradient.pdf", width=8, height=8)
-# mean_plot
-# dev.off()
-
-
-# Bayesian estimation ----
-
-# That would have to be broken into two groups
-get_prior(value~comparison*group, family="beta", 
-          data = dset[condition, ])
-brm1 <- brm(value~comparison*group, family="beta", 
-            data = dset[condition, ])
-
-pp = brms::pp_check(brm1)
-pp
-plot(brm1)
-conditional_effects(brm1)
+linear.predictor <- model.matrix(gra_rand) %*% fixef(gra_rand)$cond
+fixed.var <- var(linear.predictor)
+# sum variance of all random effects ***excluding OLRE***
+all.ranef.var <- unlist(VarCorr(gra_rand)$cond)
+ranef.var <- all.ranef.var[!names(all.ranef.var) %in% "obs"]
 
 # Pairwise cumulative ----
 ba12 <- beta.pair.abund(rbind(colSums(api1),colSums(api2)))
@@ -430,7 +450,6 @@ dev.off()
 # Incidence matrix ----
 
 # Convert matrix into incidence matrix (0-1)
-
 apiI <- api
 apiI[apiI > 0] <- 1
 sphI <- sph
@@ -589,31 +608,28 @@ pwplot <- ggplot(pwcomp, aes(fill=beta, y=val, x=comp)) +
 
 
 
-# Notes ----
-
 # Grouped
 
 # # Partition of diversity for each group separately
-# 
-# # >>> Apiformes
 
+# >>> Apiformes
 partapi1 <- beta.multi.abund(api[stages$succession == 1, ])
 partapi2 <- beta.multi.abund(api[stages$succession == 2, ])
 partapi3 <- beta.multi.abund(api[stages$succession == 3, ])
-# 
-# # >>> Spheciformes
+
+# >>> Spheciformes
 partsph1 <- beta.multi.abund(sph[stages$succession == 1, ])
 partsph2 <- beta.multi.abund(sph[stages$succession == 2, ])
 partsph3 <- beta.multi.abund(sph[stages$succession == 3, ])
-# 
-# # >>> Chrysididae
+
+# >>> Chrysididae
 partchr1 <- beta.multi.abund(chr[stages$succession == 1, ])
 partchr2 <- beta.multi.abund(chr[stages$succession == 2, ])
 partchr3 <- beta.multi.abund(chr[stages$succession == 3, ])
-# 
-# # Combine the results into a data.frame
-# 
-# # <<<needs to be fixed... columns are lists >>>
+
+# Combine the results into a data.frame
+
+# <<<needs to be fixed... columns are lists >>>
 table <- data.frame(rbind(partapi1,
                              partapi2,
                              partapi3,
@@ -629,92 +645,3 @@ table <- data.frame(rbind(partapi1,
                                      "Kleptoparasites"),
                                    each=3),
                     stage = rep(c(1,2,3),3))
-
-table
-# 
-# # Species turnover between stages
-# 
-# # >>> using beta.multi.abund
-# 
-# # Baselga, A. 2017. Partitioning abundance-based multiple-site dissimilarity into components: balanced variation in abundance and abundance gradients. Methods in Ecology and Evolution 8: 799-808
-# 
-# bapi12 <- beta.multi.abund(rac_mx[c(1,2), groups == "Apiformes"])
-# bapi23 <- beta.multi.abund(rac_mx[c(2,3), groups == "Apiformes"])
-# bapi13 <- beta.multi.abund(rac_mx[c(1,3), groups == "Apiformes"])
-# 
-# datapi <- rbind(BetaB = c(bapi12$beta.BRAY.BAL, bapi23$beta.BRAY.BAL, bapi13$beta.BRAY.BAL),
-#                 BetaG = c(bapi12$beta.BRAY.GRA, bapi23$beta.BRAY.GRA, bapi13$beta.BRAY.GRA),
-#                 BRAY = c(bapi12$beta.BRAY, bapi23$beta.BRAY, bapi13$beta.BRAY))
-# colnames(datapi) <- c("I vs. II", "II vs. III", "I vs. III")
-# 
-# 
-# # ggplot(datapi) + geom_bar()
-# # beta.multi.abund(rac_mx[, groups == "Spheciformes"])
-# # beta.multi.abund(rac_mx[, groups == "Chrysididae"])
-# 
-
-
-# # Plot
-# api1 <- api[stages$succession == 1, ]
-# api2 <- api[stages$succession == 2, ]
-# api3 <- api[stages$succession == 3, ]
-# 
-# st <- 5
-# rep <- 999
-# bsa1 <- beta.sample.abund(api1, index.family="bray", sites=st, samples=rep)
-# bsa2 <- beta.sample.abund(api2, index.family="bray", sites=st, samples=rep)
-# bsa3 <- beta.sample.abund(api3, index.family="bray", sites=st, samples=rep)
-# # 
-# dat1 <- bsa1$sampled.values$beta.BRAY.BAL
-# dat2 <- bsa2$sampled.values$beta.BRAY.BAL
-# dat3 <- bsa3$sampled.values$beta.BRAY.BAL
-# 
-# par(mfrow = c(1,2))
-# 
-# plot(density(dat1, adjust = 6, kernel = "gaussian"),
-#      xlim = c(0.5,  0.95), ylim = c(0,20),
-#      lwd=2, col="navyblue")
-# par(new=TRUE)
-# plot(density(dat2,adjust = 6, kernel = "gaussian"),
-#      xlim = c(0.5,  0.95), ylim = c(0,20),
-#      lwd=2, col="orange")
-# par(new=TRUE)
-# plot(density(dat3,adjust = 6,kernel = "gaussian"),
-#      xlim = c(0.5,  0.95), ylim = c(0,20),
-#      lwd=2, col="red")
-# 
-# dat1 <- bsa1$sampled.values$beta.BRAY.GRA
-# dat2 <- bsa2$sampled.values$beta.BRAY.GRA
-# dat3 <- bsa3$sampled.values$beta.BRAY.GRA
-# 
-# plot(density(dat1, adjust = 6, kernel = "gaussian"),
-#      lty=2,xlim = c(0,  0.2), ylim = c(0,20),
-#      lwd=2, col="navyblue")
-# par(new=TRUE)
-# plot(density(dat2, adjust = 6, kernel = "gaussian"),
-#      lty=2,xlim = c(0,  0.2), ylim = c(0,20),
-#      lwd=2, col="orange")
-# par(new=TRUE)
-# plot(density(dat3, adjust = 6, kernel = "gaussian"),
-#      lty=2,xlim = c(0,  0.2), ylim = c(0,20),
-#      lwd=2, col="red")
-
-# <<<<
-# Monte Carlo comparison
-# set.seed(11)                              # Today's date in the US - no cherry-picking!
-# r = 1:6                                   # The possible ranks of our non-zero differences
-# nsim = 1e5 
-# V = 0 
-# for (i in 1:nsim){ 
-#   rank = sample(r)                        # Sampling the ranks...
-#   sign = sample(c(1, -1), 6, replace = T) #... and the signs for each rank.
-#   V[i] = sum(rank[sign > 0])              # Doing the sum to get the V.
-# } 
-# (p_value <- sum(V <= 13) / nsim)
-
-# runs <- 1000000
-# s1 <- sample(d1d2[,1], runs, replace = T)
-# s2 <- sample(d1d2[,2], runs, replace = T)
-# mc.p.value <- sum((s2-s1) < 0)/runs
-# mc.p.value
-# hist(s1/s2)

@@ -99,7 +99,6 @@ make_rda_plot(m, 3, "Kleptoparasites", 2)
 
 
 # 5. Contingency table for envfit ----
-# https://www.datacamp.com/community/tutorials/contingency-tables-r
 
 efs <- names(spc$vectors$pvals[spc$vectors$pvals <= 0.05])
 rownames(gps) <- gps[,1]
