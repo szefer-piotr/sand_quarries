@@ -12,7 +12,8 @@ library(multcomp)
 
 # General model
 abund_gen <- glm.nb(abun~1+succession, data = desasc)
-anova(abund_gen, test = "Chi")
+anova(abund_gen, test = "Chisq")
+anova(abund_gen, test = "F")
 inter.test_gen <- emmeans(abund_gen, "succession")
 phabu_gen <- cld(inter.test_gen, Letter="abcdefghijklm")
 
