@@ -12,7 +12,7 @@ library(multcomp)
 
 # General model
 abund_gen <- glm.nb(abun~1+succession, data = desasc)
-anova(abund_gen, test = "Chisq")
+av <- anova(abund_gen, test = "Chisq")
 anova(abund_gen, test = "F")
 inter.test_gen <- emmeans(abund_gen, "succession")
 phabu_gen <- cld(inter.test_gen, Letter="abcdefghijklm")
@@ -29,6 +29,8 @@ abund_int3 <- glm(abun~1+GS, data = desasc)
 # Select the best model
 AIC(abund_int1, abund_int2,abund_int3)
 # negative binomial model fits best
+summary(abund_int2)
+anova(abund_int2)
 
 # >>> Post-hoc ----
 inter.test1 <- emmeans(abund_int2, "GS")
@@ -72,8 +74,19 @@ phrich_gen <- cld(inter.test3_gen, Letter="abcdefghijklm")
 
 
 # Facet plot ----
+# facet_dat <-data.frame( 
+#   val = c(log(desasc$abun+1),
+#           desasc$rich,
+#           desasc$sw),
+#   group = rep(desasc$group,3),
+#   stage = rep(desasc$succession, 3),
+#   type = rep(c("No. of individuals",
+#                "Richness",
+#                "Diversity"), each=96)
+# )
+
 facet_dat <-data.frame( 
-  val = c(log(desasc$abun+1),
+  val = c(desasc$abun,
           desasc$rich,
           desasc$sw),
   group = rep(desasc$group,3),
@@ -83,6 +96,8 @@ facet_dat <-data.frame(
                "Diversity"), each=96)
 )
 
+library(dplyr)
+
 facet_dat$fsucc <- 0
 facet_dat[facet_dat$stage == 1,]$fsucc <- "Stage I"
 facet_dat[facet_dat$stage == 2,]$fsucc <- "Stage II"
@@ -90,6 +105,8 @@ facet_dat[facet_dat$stage == 3,]$fsucc <- "Stage III"
 facet_dat$int <- as.character(desasc$GS)
 facet_dat$type <- as.character(facet_dat$type)
 facet_dat$post_hoc <- "x"
+
+facet_dat$group <- recode(facet_dat$group, Kleptoparasites = "Parasitic species")
 
 # Generate labels
 # For "No. of individuals"
@@ -141,9 +158,85 @@ fullflp <- fpl + geom_jitter(width=0.1, alpha=0.3, cex=2) +
                               colvec[3]))
           
 
-# pdf("fig1_glm.pdf", width = 12, height=4)
+# pdf("fig3.pdf", width = 12, height=4)
 # fullflp
 # dev.off()
+
+
+# Log scale plot
+library(ggpubr)
+
+Div <- ggplot(facet_dat[facet_dat$type == "Diversity", ], aes(x = fsucc, y = val, 
+                                    col = group,
+                                    group = group,
+                                    label = post_hoc))
+Div <- Div + geom_jitter(width=0.1, alpha=0.3, cex=2) +
+  facet_wrap(~type, scales = "free") +
+  stat_summary(fun.data=mean_cl_boot, 
+               geom="pointrange", lwd=0.8) +
+  stat_summary(fun=mean, geom="point",cex = 2) +
+  stat_summary(fun=mean, geom="line",lwd=1, lty=2)+
+  stat_summary(fun=mean, geom="text", 
+               col = rgb(10,10,10,180,maxColorValue = 255),
+               hjust = 1.4,
+               vjust = -1.5) +
+  xlab("") + ylab("") +
+  theme_bw() +
+  scale_color_manual("Trophic guild", values=c(colvec[1], 
+                              colvec[2], 
+                              colvec[3]))
+  
+Abu <- ggplot(facet_dat[facet_dat$type == "No. of individuals", ], aes(x = fsucc, y = val, 
+                                                              col = group,
+                                                              group = group,
+                                                              label = post_hoc))
+Abu <- Abu + geom_jitter(width=0.1, alpha=0.3, cex=2) +
+  facet_wrap(~type, scales = "free")+
+  scale_y_continuous(trans = 'log10') +
+  annotation_logticks(sides="l")+
+  stat_summary(fun.data=mean_cl_boot, 
+               geom="pointrange", lwd=0.8) +
+  stat_summary(fun=mean, geom="point",cex = 2) +
+  stat_summary(fun=mean, geom="line",lwd=1, lty=2)+
+  stat_summary(fun=mean, geom="text", 
+               col = rgb(10,10,10,180,maxColorValue = 255),
+               hjust = 1.4,
+               vjust = -c(1.5,2,1.4,
+                          1.5,3,1.4,
+                          1.5,1.4,1.4)) +
+  xlab("") + ylab("") +
+  theme_bw() +
+  scale_color_manual("Trophic guild",values=c(colvec[1], 
+                              colvec[2], 
+                              colvec[3]))
+# Abu
+
+Ric <- ggplot(facet_dat[facet_dat$type == "Richness", ], aes(x = fsucc, y = val, 
+                                                              col = group,
+                                                              group = group,
+                                                              label = post_hoc))
+
+Ric <- Ric + geom_jitter(width=0.1, alpha=0.3, cex=2) +
+  facet_wrap(~type, scales = "free") +
+  stat_summary(fun.data=mean_cl_boot, 
+               geom="pointrange", lwd=0.8) +
+  stat_summary(fun=mean, geom="point",cex = 2) +
+  stat_summary(fun=mean, geom="line",lwd=1, lty=2)+
+  stat_summary(fun=mean, geom="text", 
+               col = rgb(10,10,10,180,maxColorValue = 255),
+               hjust = 1.4,
+               vjust = -1.5) +
+  xlab("") + ylab("") +
+  theme_bw() +
+  scale_color_manual("Trophic guild", values=c(colvec[1], 
+                              colvec[2], 
+                              colvec[3]))
+
+# svg("revision_1/figures/fig3.svg", width = 12, height=4)
+pdf("revision_1/figures/fig3.pdf", 
+    width = 12, height=4, onefile = FALSE)
+ggarrange(Div,Abu,Ric, nrow = 1, ncol = 3, common.legend = TRUE, legend="bottom")
+dev.off()
 
 # Table 1 - results from mixed effect models
 summary(abund_int2)

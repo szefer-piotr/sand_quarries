@@ -15,6 +15,7 @@ library(betareg)
 library(glmmTMB)
 library(lmtest)
 library(ggeffects)
+library(dplyr)
 
 # Convert matrix into incidence matrix (0-1)
 
@@ -245,6 +246,9 @@ names(cfs) <- c("b_group",
                 "ucl",
                 "b_comparison")
 
+gset$b_group <- recode(gset$b_group, Kleptoparasites = "Parasitic species")
+cfs$b_group <- recode(cfs$b_group, Kleptoparasites = "Parasitic species")
+
 bgcb <- ggplot(gset, aes(b_comparison, bcvals)) +
   geom_jitter(width = 0.1,aes(color=b_group), alpha = 0.2)+
   geom_line(aes(group = 1, color = b_group), 
@@ -256,14 +260,16 @@ bgcb <- ggplot(gset, aes(b_comparison, bcvals)) +
   scale_color_manual(values=c(colvec[1], 
                               colvec[2], 
                               colvec[3]))+
-  ylab("Brray-Curtis dissimilarity")+xlab("")
+  ylab("Bray-Curtis dissimilarity")+xlab("")
  
-# bgcb  + theme_bw()+theme(legend.position = "none")
-
-pdf("fig3b_bc.pdf", width=12, height=4)
-jpeg("fig3b_bc.jpg", width = 1200, height = 400, res = 150)
 bgcb  + theme_bw()+theme(legend.position = "none")
-dev.off()
+
+# pdf("fig3b_bc.pdf", width=12, height=4)
+# jpeg("fig3b_bc.jpg", width = 1200, height = 400, res = 150)
+# pdf("revision_1/figures/Fig5.pdf", width=12, height=4,
+#     onefile = FALSE)
+# bgcb  + theme_bw()+theme(legend.position = "none")
+# dev.off()
 
 # GRADIENT COMPONENT----
 # condition <- dset$diff == "Balanced"
@@ -296,7 +302,17 @@ names(cfs) <- c("group",
                 "ucl",
                 "comparison")
 
-bgcb <- ggplot(dset[condition,], aes(comparison, value)) +
+
+library(dplyr)
+
+data_used <- dset[condition,]
+gset$b_group <- recode(gset$b_group, Kleptoparasites = "Parasitic species")
+cfs$group <- recode(cfs$group, Kleptoparasites = "Parasitic species")
+
+data_used$group <- recode(data_used$group,
+                                 Kleptoparasites = "Parasitic species")
+
+bgcb <- ggplot(data_used, aes(comparison, value)) +
   geom_jitter(width = 0.1,aes(color=group), alpha = 0.2)+
   geom_line(aes(group = 1, color = group), lty = c(2,2,2,
                                                    2,2,2), data = cfs)+
@@ -312,8 +328,10 @@ bgcb <- ggplot(dset[condition,], aes(comparison, value)) +
   ggtitle("Gradient component")
 
 # pdf("fig3c_gradient.pdf", width=12, height=4)
-jpeg("fig3c_gradient.jpg", width = 1200, height = 400, res = 150)
-bgcb + theme_bw()+theme(legend.position = "none")
+# jpeg("fig3c_gradient.jpg", width = 1200, height = 400, res = 150)
+pdf("revision_1/figures/FigA3.pdf", width=12, height=4,
+    onefile = FALSE)
+bgcb  + theme_bw()+theme(legend.position = "none")
 dev.off()
 
 # br1 <- betareg(value~comparison*group, 

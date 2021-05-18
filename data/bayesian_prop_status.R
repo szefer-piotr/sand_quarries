@@ -97,6 +97,9 @@ plotdat <- data.frame(Stage = newdat$fStage,
 plotdat$ucl <- plotdat$Proportion + qnorm(0.975)*plotdat$SE - 0.5/plotdat$N
 plotdat$lcl <- plotdat$Proportion - qnorm(0.975)*plotdat$SE - 0.5/plotdat$N
 
+library(dplyr)
+plotdat$Group <- recode(plotdat$Group, Kleptoparasites = "Parasitic species")
+
 p<- ggplot(plotdat, aes(x=Stage, y=Proportion, 
                         group = Group,
                         color = Group,
@@ -111,10 +114,10 @@ p<- ggplot(plotdat, aes(x=Stage, y=Proportion,
   facet_wrap(~Group)+
   ylim(0, 0.21)
 
-jpeg("fig_4_rare_species_v2.jpg", width = 800, height = 300)
+pdf("revision_1/figures/Fig6.pdf", width = 10, height = 4, onefile = FALSE)
 p+ theme_bw()+ theme(legend.position = "none")+
-  scale_color_manual(values=c(alpha(colvec[2],1), 
-                              alpha(colvec[1],1), 
+  scale_color_manual(values=c(alpha(colvec[1],1), 
+                              alpha(colvec[2],1), 
                               alpha(colvec[3],1)))
 dev.off()
 

@@ -38,19 +38,24 @@ round(sumeig[2,2],3)
 # Fit species onto ordination
 set.seed(1234)
 gps <- data.frame(Species = colnames(asc), Group = groups)
+rownames(gps) <- gps$Species
+
 spc <- envfit(m, asc, permutations = 9999)
 
 spcdf <- data.frame(Spec = names(spc$vectors$pvals),
                     R = spc$vectors$r,
                     Pvals = spc$vectors$pvals,
-                    gps[names(spc$vectors$pvals), ]$Group)
+                    Group = gps[names(spc$vectors$pvals), ]$Group)
+
+# Names are all wrong!!!!
+selected_gof <- spcdf[spcdf$Pvals <= 0.05, ]
 
 # withouth selection
 as.factor(groups)
 names(summary(rda1))
 which(colnames(asc) == rownames(summary(rda1)$species))
 
-make_rda_plot <- function(m, scl=3, type = "Apiformes", color){
+make_rda_plot <- function(m, scl=3, type = "Apiformes", color, letter = "A"){
   plot(m, type = "n", scaling = scl, 
        xlab = paste("RDA1 [", 
                     round(sumeig[2,1]*100,2),
@@ -61,6 +66,8 @@ make_rda_plot <- function(m, scl=3, type = "Apiformes", color){
                     "%]", 
                     sep=""), 
        cex.lab = 1.5)
+  
+  title(letter, adj = 0.1, line = -2)
   
   points(m, display = "species",
          col = colvec[color],
@@ -79,23 +86,25 @@ make_rda_plot <- function(m, scl=3, type = "Apiformes", color){
        pos = 3)
   
   grnames <- colnames(asc[,groups == type])
+  print(grnames)
   
-  lgn <- length(selected_gof[selected_gof %in% grnames])
+  selected <- grnames[grnames %in% rownames(selected_gof)]
+  # lgn <- length(selected_gof[selected_gof$Spec %in% grnames, ]$Spec)
   
-  if(lgn != 0){
-    text(m, display="species", scaling=scl,
-         select = selected_gof[selected_gof %in% grnames],
-         col=cgray)
-  }
+  print(selected)
+  
+  text(m, display="species", scaling=scl,
+       select = selected,
+       col=cgray)
 }
 
 
-# pdf("fig2_rda.pdf", width = 12, height = 4)
+pdf("revision_1/figures/Fig4.pdf", width = 12, height = 4, onefile = FALSE)
 par(mfrow = c(1,3))
 make_rda_plot(m, 3, "Herbivores", 1)
-make_rda_plot(m, 3, "Predators", 3)
-make_rda_plot(m, 3, "Kleptoparasites", 2)
-# dev.off()
+make_rda_plot(m, 3, "Kleptoparasites", 2, letter = "B")
+make_rda_plot(m, 3, "Predators", 3, letter = "C")
+dev.off()
 
 
 # 5. Contingency table for envfit ----
